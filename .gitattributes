@@ -4,3 +4,7 @@
 *.umap binary
 *.png binary
 *.fbx binary
+*.mp4 binary
+*.gif binary
+*.jpg binary
+*.wav binary

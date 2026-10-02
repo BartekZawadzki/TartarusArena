@@ -100,7 +100,8 @@ generative AI programs, or into training them. How this project relates to that:
   for model training (on consumer plans this is a privacy setting; Anthropic's commercial and API terms do not train
   on inputs by default). Then screenshots that show the content cannot become training input.
 - Do not publish frames, renders or screenshots of the assets as an image collection or dataset. The repository
-  contains none; its icons are game-icons.net drawings.
+  holds only what presents the project: the teaser, its preview, a poster and six screenshots in [media/](../media/).
+  Its icons are game-icons.net drawings.
 
 ## 6. Checklist before the repository goes public
 

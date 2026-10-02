@@ -20,7 +20,8 @@ passes over the docs and the code) and checked their findings before acting on t
 
 ## The Dark Factory patterns, as applied here
 
-The DF method treats an AI agent as a factory line with gates: intent becomes a specification, the specification
+The [Dark Factory](https://github.com/OneDro1d/dark-factory) method (*autonomous, governed, evidence-gated delivery*)
+treats an AI agent as a factory line with gates: intent becomes a specification, the specification
 becomes tests, the work is built against the tests, an independent check tries to break it, and nothing ships without
 evidence. In this repository that looks like:
 
@@ -80,6 +81,7 @@ evidence. In this repository that looks like:
 | English | 10-01 | the whole game in English | ~280 data strings and every UI text translated; the packaged data rebuilt | 11 English UI screenshots from the exe; labs 26/26 and 16/16 |
 | Teasers | 10-01/02 | record the best scenes and make a teaser; then a lower camera, the operator's own footage, game-style music, a calmer cut, a one-minute motion-design cut | the in-engine film director, a numpy-synthesised score, Blender title cards and edit | four teasers (55 s, 55 s, 79 s, 59 s) |
 | Repo in English | 10-02 | everything in English for the public demo | the last Polish comments and data names, the maps' signs regenerated, these docs | tests 50/51 (the one failure is a damaged drive); ProtoLab 26/26, Hades 16/16, Training 0 fails |
+| Public release | 10-02 | prepare the repo for the world, the Paragon terms, the teaser for the post | the Fab terms researched at the source, the public name Tartarus Arena, MIT, a one-commit public repository, the final teaser and a media kit in the repo | no Epic content or secrets in any revision; 60 of 60 doc links resolve |
 
 ## Numbers at a glance
 

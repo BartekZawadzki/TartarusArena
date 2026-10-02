@@ -1,29 +1,73 @@
 # Tartarus Arena
 
-**A 5v5 MOBA prototype in Unreal Engine 5.8, built end to end by Claude following the Dark Factory (DF) patterns.**
+<p align="center">
+  <a href="media/TartarusArena_Teaser.mp4"><img src="media/preview.gif" alt="Tartarus Arena: teaser highlights" width="760"></a>
+</p>
 
-*Working title during development: "Paragon Arena". It was renamed because Epic's Paragon asset listings say "You may
-not use the trademark PARAGON to advertise or name your game". The Unreal project and its C++ module keep the internal
-identifier `ParagonArena`.*
+<p align="center">
+  <b>A 5v5 MOBA in Unreal Engine 5.8, built end to end by Claude with the Dark Factory Patterns.</b><br>
+  <a href="media/TartarusArena_Teaser.mp4">▶ Watch the teaser (59 s)</a> ·
+  <a href="docs/BUILT-WITH-CLAUDE.md">How it was built</a> ·
+  <a href="docs/TESTING.md">The evidence</a> ·
+  <a href="docs/USING-PARAGON-ASSETS.md">Epic's Paragon assets</a>
+</p>
 
-Eleven heroes, two game modes on two maps, smart bots, a training center, LAN play, two experimental prototypes of a
-new game, and a full verification harness. The C++, the Python tools that build the maps, the data, the tests, the
-in-game labs, these docs and the teasers were all written by Claude (Anthropic's Claude Code) over seven days
-(2026-09-26 → 2026-10-02). The human operator set the goals, played the builds, gave feedback in plain language and
-made the decisions only a human should make. The art is Epic Games' free Paragon content.
+<p align="center">
+  <img alt="Unreal Engine 5.8" src="https://img.shields.io/badge/Unreal%20Engine-5.8-0E1128?logo=unrealengine&logoColor=white">
+  <img alt="C++" src="https://img.shields.io/badge/C%2B%2B-GAS-00599C?logo=cplusplus&logoColor=white">
+  <img alt="Built with Claude Code" src="https://img.shields.io/badge/built%20with-Claude%20Code-D97757">
+  <img alt="Dark Factory Patterns" src="https://img.shields.io/badge/method-Dark%20Factory%20Patterns-333333">
+  <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green">
+</p>
 
-> **Not affiliated with Epic Games.** *Paragon* is a trademark of Epic Games, Inc. This is an unofficial,
-> non-commercial demo. The Paragon characters, environments, animations and voices are Epic content, used under
-> Epic's license for Unreal Engine projects. None of it is redistributed in this repository. What the terms say and
-> how the project follows them: [docs/USING-PARAGON-ASSETS.md](docs/USING-PARAGON-ASSETS.md).
+**Seven days, one human, one AI agent.** Eleven heroes, two game modes on two maps, bots that read the game, a
+training center, LAN play, two prototypes of a new game, a full verification harness and the teaser above. Every
+line of C++, the Python tools that build the maps, the data, the tests, the in-game labs, these docs and the teaser
+were written by **Claude** (Anthropic's Claude Code) working as a **Dark Factory** agent, between 2026-09-26 and
+2026-10-02, in 22 versions. Each version shipped with evidence. The human operator set the goals, played the builds,
+gave feedback in plain language and made the decisions only a human should make.
+
+> **Not affiliated with Epic Games.** The characters, environments, animations and voices are Epic Games' free
+> Paragon assets, used under Epic's license for Unreal Engine projects and not redistributed here. *Paragon* is a
+> trademark of Epic Games, Inc. The game's working title was "Paragon Arena"; it was renamed because Epic's listings
+> say "You may not use the trademark PARAGON to advertise or name your game". The Unreal project and its C++ module
+> keep the internal identifier `ParagonArena`. Details: [docs/USING-PARAGON-ASSETS.md](docs/USING-PARAGON-ASSETS.md).
+
+## Built with Claude and the Dark Factory Patterns
+
+[The Dark Factory](https://github.com/OneDro1d/dark-factory) is a method for *autonomous, governed, evidence-gated
+delivery*: an agent works without a human in the inner loop and stays trustworthy, because its summaries are never
+accepted on their own. Only raw evidence counts: test results, lab output, measurements, screenshots that anyone
+can re-run or re-check. A build moves through gated stages, and the agent comes back to the human only when the goal
+is met or a decision is the human's. This is how the stages show up in this repository:
+
+| Dark Factory stage | In this repository |
+|---|---|
+| **Product owner** — vision, requirements as rules, test scenarios | [`01-game-design.md`](docs/dark-factory/01-game-design.md): pillars with numeric targets, 29 validation rules, 14 scenarios; every fact tagged *confirmed by the operator*, *agent's assumption* or *open* |
+| **Solution architect** — data, flows, decisions | [`02-technical-design.md`](docs/dark-factory/02-technical-design.md): each rule mapped to where and how it is enforced; 14 dated ADRs |
+| **TDD** — the test list *is* the rules | pure rule functions (damage, gold, shop, ranks, the bot brain, Conquest) under 6 automation specs, 17 tests in v1, 51 today |
+| **QA with evidence** | ~15 in-game *labs* that drive the real game and print `LAB PASS/FAIL`, seeded headless bot matches, the packaged exe re-checked every release: [`TESTING.md`](docs/TESTING.md) and a QA report per version |
+| **Adversary gate** | a blind, read-only reviewer agent found 13 real defects in the network code; decoy checks prove each gate can fail |
+| **The autonomous loop** | hard stops (publishing, spending, downloads, deleting the owner's data, windows on the owner's desktop) wait for the human; everything else the agent decides and proves |
+
+The full story, with the timeline of all 22 versions, the numbers, the engineering lessons and an honest list of
+what is and is not proven: **[docs/BUILT-WITH-CLAUDE.md](docs/BUILT-WITH-CLAUDE.md)**.
+
+## Screenshots
 
 | | |
 |---|---|
-| **How it was built** | [docs/BUILT-WITH-CLAUDE.md](docs/BUILT-WITH-CLAUDE.md): the method, the timeline of 22 versions, the evidence, the lessons |
-| **Design and decisions** | [docs/dark-factory/](docs/dark-factory/): game design (vision, rules, scenarios), technical design with 14 ADRs, a QA report per version |
-| **Verification** | [docs/TESTING.md](docs/TESTING.md): 6 automation specs, a dozen in-game labs, seeded bot matches, packaged-exe checks |
-| **Teasers** | rendered by the game itself ([Tools/Teaser/](Tools/Teaser/)): an in-engine film director, a synthesised score, Blender title cards and edit |
-| **Epic's Paragon assets** | [docs/USING-PARAGON-ASSETS.md](docs/USING-PARAGON-ASSETS.md): what is used, the Fab license, the trademark, the "NoAI" flag, how the repo complies |
+| ![FIGHT! — kinetic type over a real match start](media/screens/01-fight.jpg) | ![A team fight with a lower third](media/screens/02-team-fights.jpg) |
+| ![The shop: parts, upgrades, legendaries](media/screens/03-build-your-hero.jpg) | ![The Power of Tartarus](media/screens/04-power-of-tartarus.jpg) |
+| ![Three fights in a split screen](media/screens/05-outplay-split-screen.jpg) | ![A lightning team fight](media/screens/06-lightning-team-fight.jpg) |
+
+### The teaser was made by the agent too
+
+The game films itself: `-ArenaTeaser=<scene>` starts an in-engine director that finds the hottest fight, frames it
+and records it frame by frame. The music is synthesised from scratch in Python (no samples). The 3D title cards are
+rendered in Blender, and the motion-design edit (kinetic type, the shop panel, the split screen) is built by a
+script in Blender's sequencer. The cut mixes the director's takes with the operator's own play. Pipeline:
+[Tools/Teaser/](Tools/Teaser/); the media and how to credit them: [media/](media/).
 
 ## At a glance
 
@@ -36,7 +80,7 @@ made the decisions only a human should make. The art is Epic Games' free Paragon
 | Maps | 4, all built by Python scripts: Arena, Conquest, Training, Proto |
 | Players | single player with bots (three difficulties), LAN multiplayer (listen server, join by IP, bots fill the rest) |
 | Prototypes | a new game in a grey-box town: third-person action combat, and the same game with Hades-style controls |
-| Verification | automation specs (~50 cases), ~15 self-checking in-game labs, seeded headless bot matches, a packaged-exe check every release |
+| Verification | 51 automation tests in 6 specs, ~15 self-checking in-game labs, seeded headless bot matches, a packaged-exe check every release |
 
 ## What you can play
 
@@ -147,7 +191,8 @@ Every feature lands with evidence. The full catalogue is in [docs/TESTING.md](do
 | `Content/Data/heroes.json` | every hero, ability, item, structure, camp and rule as data |
 | `Content/Maps`, `Content/Arena` | the four maps, the project's materials and icons |
 | `Tools/` | the map builders and content scripts (Python for the UE editor), Blender scripts, the icon sources, the teaser pipeline |
-| `docs/` | how it was built, the DF documents, the testing guide |
+| `docs/` | how it was built, the DF documents, the testing guide, the Epic-assets terms |
+| `media/` | the teaser, its preview, the poster and screenshots ([media/README.md](media/README.md)) |
 
 ## Credits and legal
 

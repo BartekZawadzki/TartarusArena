@@ -168,3 +168,14 @@ motion-designer skills and the music you just picked" + "weave in your best 5v5 
   bars now stand in place from the first frame (they used to slide in during the fade from black), so the header
   never shows. A contact sheet every 1.5 s of the final file: no old title anywhere.
 - The earlier teaser files (`ParagonArena_Teaser*.mp4`) keep the old logo and are not for publishing.
+
+## 10. The teaser in the repository, for the post (operator 2026-10-02: "the correct teaser must be in the final repo that will be shown — it is for a post about the game made with the Dark Factory Patterns; polish and check the repo for that")
+
+- `media/`: the teaser for the repository (two-pass H.264 at 4.9 Mb/s, 36.3 MB, 1080p; the 133 MB master goes to the
+  release), a 9 s highlights GIF (6.6 MB) at the top of the README, the logo frame as a poster, six 2.39:1 stills,
+  and `media/README.md` (what each file is for, how the teaser was made, how to credit and name the game).
+- README opened up for a reader arriving from a post: the preview, the links (teaser, how it was built, evidence,
+  Epic's assets), the story in a paragraph, the Dark Factory stages mapped to the files that hold them (linking the
+  public method at github.com/OneDro1d/dark-factory), a screenshot gallery, how the teaser itself was made.
+- Checks: 60 of 60 relative links and images in 29 markdown files resolve (`check_links.js`); media marked binary in
+  `.gitattributes`.
