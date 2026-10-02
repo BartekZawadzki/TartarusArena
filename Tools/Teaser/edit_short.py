@@ -21,7 +21,8 @@ END = 59.0
 XF = 6
 FONTS = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Content", "Data", "Fonts"))
 MUSIC = "teaser_music_short.wav"
-OUT_DIR, STILLS_DIR = "edit_short", "stills_short"
+OUT_DIR, STILLS_DIR = "edit_short_final", "stills_short_final"
+LOGO_TITLES = "titles_tartarus"   # where titles.py rendered the TARTARUS ARENA logo (<dir>/logo/f_0001.png ...)
 GOLD = (0.97, 0.8, 0.45, 1.0)
 GOLD_RGB = (0.97, 0.78, 0.4)
 W, H = 1920, 1080
@@ -246,7 +247,7 @@ lb = footage("LogoBG", 1, F(t0), F(t1), take, src, speed)
 lbb = S.new_effect("LogoBlur", "GAUSSIAN_BLUR", 3, F(t0), length=F(t1) - F(t0), input1=lb)
 lbb.size_x = lbb.size_y = 28.0
 lbb.color_multiply = 0.38
-d = os.path.join(ROOT, "titles_v3", "logo")
+d = os.path.join(ROOT, LOGO_TITLES, "logo")
 files = sorted(f for f in os.listdir(d) if f.endswith(".png"))
 n = F(t1) - F(t0)
 seq = [files[min(i, len(files) - 1)] for i in range(n)]
@@ -263,7 +264,7 @@ key(gl, "blend_alpha", F(t0), 0.2)
 key(gl, "blend_alpha", F(t0 + 2.6), 1.0, "SINE", "EASE_IN_OUT")
 key(gl, "blend_alpha", F(t0 + 5.0), 0.45, "SINE", "EASE_IN_OUT")
 text("LogoSub", 17, t0 + 2.4, t1 - 0.6, "11 HEROES   ·   ARENA   ·   CONQUEST", font_semi, 34, 0.5, 0.235, rgb=(0.96, 0.9, 0.78, 1.0), fade_in=15, fade_out=14)
-text("LogoFine", 18, t0 + 3.2, t1 - 0.6, "A fan-made MOBA built with Paragon assets released by Epic Games", font_med, 20, 0.5, 0.165, rgb=(0.75, 0.75, 0.78, 1.0), fade_in=15, fade_out=14)
+text("LogoFine", 18, t0 + 3.2, t1 - 0.6, "Built with Epic Games' free Paragon assets  ·  Not affiliated with or endorsed by Epic Games", font_med, 20, 0.5, 0.165, rgb=(0.75, 0.75, 0.78, 1.0), fade_in=15, fade_out=14)
 
 # ------------------------------------------------------------------ the kinetic type over the play
 # pick your hero
@@ -328,8 +329,8 @@ for name, sign in (("BarTop", 1), ("BarBot", -1)):
     b = color(name, 22, 1, F(END), (0, 0, 0))
     b.transform.scale_y = BAR / H
     b.transform.origin = (0.5, 0.5)
-    key(b.transform, "offset_y", F(0.6), sign * (540 + BAR / 2), "SINE", "EASE_OUT")
-    key(b.transform, "offset_y", F(1.8), sign * (540 - BAR / 2), "LINEAR")
+    # in place from the first frame: the opening roster (the operator's recording) shows the old working title above them
+    b.transform.offset_y = sign * (540 - BAR / 2)
 blk = color("Black", 24, 1, F(END), (0, 0, 0))
 key(blk, "blend_alpha", 1, 1.0)
 key(blk, "blend_alpha", F(0.1), 1.0, "SINE", "EASE_IN_OUT")

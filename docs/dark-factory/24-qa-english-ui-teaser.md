@@ -158,3 +158,13 @@ motion-designer skills and the music you just picked" + "weave in your best 5v5 
   user name and recording file names replaced by repository-relative paths, `PATH` lookups and parameters
   (`FFMPEG`, `PARAGON_EXE`, `TEASER_REC1/2`).
 - Editor build succeeded after the rename.
+
+## 9. The final teaser under the public name (operator 2026-10-02: "fix the final teaser so its logo matches the current, Epic-compliant state")
+
+- The short teaser re-rendered as `Build/Teaser/TartarusArena_Teaser.mp4` (133.2 MB, 59 s; `_web` 50.1 MB): the
+  **TARTARUS ARENA** 3D logo (`titles.py`, rendered to `titles_tartarus/logo`), the closing line "Built with Epic Games'
+  free Paragon assets · Not affiliated with or endorsed by Epic Games", the file's title and comment metadata to match.
+- The opening roster comes from the operator's recording and carries the old working title in its header. The 2.39:1
+  bars now stand in place from the first frame (they used to slide in during the fade from black), so the header
+  never shows. A contact sheet every 1.5 s of the final file: no old title anywhere.
+- The earlier teaser files (`ParagonArena_Teaser*.mp4`) keep the old logo and are not for publishing.
