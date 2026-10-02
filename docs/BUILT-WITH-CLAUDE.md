@@ -16,7 +16,8 @@ Factory (DF) patterns the work followed, the timeline, the numbers, the engineer
 | decided at the hard stops: deletions, downloads, windows opened on the desktop, publishing | stopped at every hard stop and asked; it never published, spent money, downloaded third-party assets or deleted the operator's data on its own |
 
 Claude also delegated bounded, read-only jobs to helper agents (a blind code review of the network code, research
-passes over the docs and the code) and checked their findings before acting on them.
+passes over the docs and the code, translation passes) and checked their findings before acting on them. One
+slipped: a helper's count of 50 tests reached a README draft until a real run showed 51.
 
 ## The Dark Factory patterns, as applied here
 
@@ -29,11 +30,11 @@ evidence. In this repository that looks like:
    three pillars with numeric proxies (e.g. "at least one ability cast per hero every 4 s") and explicit non-goals.
    Every fact is tagged **[C]** confirmed by the operator, **[A]** the agent's assumption, or **[O]** open, so it is
    always clear who decided what.
-2. **Rules as the specification.** The same document holds 29 numbered validation rules (VR-01 … VR-31: damage,
+2. **Rules as the specification.** The same document holds 30 numbered validation rules (VR-01 … VR-31: damage,
    cooldowns, friendly fire, physics caps, aim assist, sustain, Conquest…) and 14 test scenarios (GS-01 … GS-14),
    each a *state → input → expected state*, written before the code that satisfies them.
-3. **Formalised design with traceability.** [`02-technical-design.md`](dark-factory/02-technical-design.md) maps every
-   rule to where and how it is enforced (a unit spec, a simulation, a log check) and keeps 14 dated ADRs (architecture
+3. **Formalised design with traceability.** [`02-technical-design.md`](dark-factory/02-technical-design.md) maps the
+   core rules (VR-01 … VR-10) to where and how they are enforced (a unit spec, a simulation, a log check) and keeps 14 dated ADRs (architecture
    decision records) for the big turns: data-driven GAS abilities, indicators, aim assist, ranks and items, replication,
    LAN, the Paragon locomotion fix.
 4. **Pure rules, tested in isolation.** Damage, gold, the shop, ranks, the bot brain and Conquest's protection chain
@@ -48,13 +49,17 @@ evidence. In this repository that looks like:
    all confirmed and fixed ([QA 17](dark-factory/17-qa-v14-v16-conquest-heroes-lan.md)).
 8. **Measurement over opinion.** Balance moved in numbered rounds against target bands: 28 duel-lab rounds in v17, and
    four melee rounds in v21 where the first overshot (97 % melee wins) and was walked back to 82 %.
-9. **The packaged game is the authority.** Every release is re-checked in the Shipping build, not just the editor:
+9. **The packaged game is the authority.** Nearly every release is re-checked in the Shipping build, not just the editor:
    that is how the missing Conquest map, the dropped cook packages and a translation patch that never loaded were caught.
-10. **Evidence tiers in every verdict.** Each QA report separates T1 (measured), T2 (seen in screenshots or renders)
-    and T3 (only a human can judge: fun, feel, taste). T3 is left to the operator, never claimed.
+10. **Evidence tiers.** The QA reports separate T1 (measured), T2 (seen in screenshots or renders) and T3 (only a
+    human can judge: fun, feel, taste); T3 is left to the operator, never claimed. The explicit tier verdicts run up
+    to v11; later reports list the evidence and the open items without the labels.
 11. **Hard stops.** Publishing, spending money, downloading third-party content, deleting the operator's data and
     opening windows on the operator's desktop all need an explicit go-ahead, one at a time. The operator's game
     settings file is backed up and restored byte for byte around every rendered run.
+
+How well the method fit a game, where this run deviated from it, what was concluded and what could come next for DF:
+[DARK-FACTORY-FIELD-REPORT.md](DARK-FACTORY-FIELD-REPORT.md).
 
 ## Timeline
 
@@ -90,8 +95,8 @@ evidence. In this repository that looks like:
 | Calendar time | 7 days, 2026-09-26 → 2026-10-02 |
 | Versions | v1 … v22 (plus v7b), the English pass, 4 teasers |
 | Code | ~22,000 lines of C++ in 80 files; ~5,500 lines of Python in 26 tools |
-| Design | 29 validation rules, 14 test scenarios, 14 ADRs, 20 QA reports |
-| Tests | 6 automation specs, 51 tests; ~15 in-game labs; seeded bot matches in every release |
+| Design | 30 validation rules, 14 test scenarios, 14 ADRs, 20 QA reports |
+| Tests | 6 automation specs, 51 tests; ~15 in-game labs; seeded bot matches in most releases |
 | Content | 11 heroes, 38 skins, 27 items, 4 maps built by scripts, 2 modes (+ 3v3 and 1v1 variants), 2 prototypes |
 
 ## Engineering lessons worth sharing
@@ -136,5 +141,6 @@ evidence. In this repository that looks like:
 1. [`01-game-design.md`](dark-factory/01-game-design.md): what was asked for, as rules and scenarios.
 2. [`02-technical-design.md`](dark-factory/02-technical-design.md): how it was built, and the decisions (ADRs).
 3. The QA reports in order, [`05-qa-v1`](dark-factory/05-qa-v1-bot-arena.md) to [`24-qa-english-ui-teaser`](dark-factory/24-qa-english-ui-teaser.md).
-   Each one starts with the operator's request and ends with the evidence and what remains unverified.
+   Each one starts with the operator's request and ends with the evidence; most also say what stays open.
 4. [TESTING.md](TESTING.md) to reproduce any of the evidence yourself.
+5. [DARK-FACTORY-FIELD-REPORT.md](DARK-FACTORY-FIELD-REPORT.md): the method under test, its conclusions and the options for what next.

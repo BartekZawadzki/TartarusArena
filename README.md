@@ -8,6 +8,7 @@
   <b>A 5v5 MOBA in Unreal Engine 5.8, built end to end by Claude with the Dark Factory Patterns.</b><br>
   <a href="media/TartarusArena_Teaser.mp4">▶ Watch the teaser (59 s)</a> ·
   <a href="docs/BUILT-WITH-CLAUDE.md">How it was built</a> ·
+  <a href="docs/DARK-FACTORY-FIELD-REPORT.md">DF field report</a> ·
   <a href="docs/TESTING.md">The evidence</a> ·
   <a href="docs/USING-PARAGON-ASSETS.md">Epic's Paragon assets</a>
 </p>
@@ -43,15 +44,18 @@ is met or a decision is the human's. This is how the stages show up in this repo
 
 | Dark Factory stage | In this repository |
 |---|---|
-| **Product owner** — vision, requirements as rules, test scenarios | [`01-game-design.md`](docs/dark-factory/01-game-design.md): pillars with numeric targets, 29 validation rules, 14 scenarios; every fact tagged *confirmed by the operator*, *agent's assumption* or *open* |
-| **Solution architect** — data, flows, decisions | [`02-technical-design.md`](docs/dark-factory/02-technical-design.md): each rule mapped to where and how it is enforced; 14 dated ADRs |
+| **Product owner** — vision, requirements as rules, test scenarios | [`01-game-design.md`](docs/dark-factory/01-game-design.md): pillars with numeric targets, 30 validation rules, 14 scenarios; every fact tagged *confirmed by the operator*, *agent's assumption* or *open* |
+| **Solution architect** — data, flows, decisions | [`02-technical-design.md`](docs/dark-factory/02-technical-design.md): the core rules mapped to where and how they are enforced; 14 dated ADRs |
 | **TDD** — the test list *is* the rules | pure rule functions (damage, gold, shop, ranks, the bot brain, Conquest) under 6 automation specs, 17 tests in v1, 51 today |
-| **QA with evidence** | ~15 in-game *labs* that drive the real game and print `LAB PASS/FAIL`, seeded headless bot matches, the packaged exe re-checked every release: [`TESTING.md`](docs/TESTING.md) and a QA report per version |
+| **QA with evidence** | ~15 in-game *labs* that drive the real game and print `LAB PASS/FAIL`, seeded headless bot matches, the packaged exe re-checked in nearly every release: [`TESTING.md`](docs/TESTING.md) and a QA report per version or pair of versions |
 | **Adversary gate** | a blind, read-only reviewer agent found 13 real defects in the network code; decoy checks prove each gate can fail |
 | **The autonomous loop** | hard stops (publishing, spending, downloads, deleting the owner's data, windows on the owner's desktop) wait for the human; everything else the agent decides and proves |
 
 The full story, with the timeline of all 22 versions, the numbers, the engineering lessons and an honest list of
 what is and is not proven: **[docs/BUILT-WITH-CLAUDE.md](docs/BUILT-WITH-CLAUDE.md)**.
+
+**A field test of the method.** What a game adds to DF, which gate caught which defect, where the run deviated from
+the method, twelve conclusions and the options they open: **[docs/DARK-FACTORY-FIELD-REPORT.md](docs/DARK-FACTORY-FIELD-REPORT.md)**.
 
 ## Screenshots
 
@@ -80,7 +84,7 @@ script in Blender's sequencer. The cut mixes the director's takes with the opera
 | Maps | 4, all built by Python scripts: Arena, Conquest, Training, Proto |
 | Players | single player with bots (three difficulties), LAN multiplayer (listen server, join by IP, bots fill the rest) |
 | Prototypes | a new game in a grey-box town: third-person action combat, and the same game with Hades-style controls |
-| Verification | 51 automation tests in 6 specs, ~15 self-checking in-game labs, seeded headless bot matches, a packaged-exe check every release |
+| Verification | 51 automation tests in 6 specs, ~15 self-checking in-game labs, seeded headless bot matches, a packaged-exe check in nearly every release |
 
 ## What you can play
 
@@ -191,7 +195,7 @@ Every feature lands with evidence. The full catalogue is in [docs/TESTING.md](do
 | `Content/Data/heroes.json` | every hero, ability, item, structure, camp and rule as data |
 | `Content/Maps`, `Content/Arena` | the four maps, the project's materials and icons |
 | `Tools/` | the map builders and content scripts (Python for the UE editor), Blender scripts, the icon sources, the teaser pipeline |
-| `docs/` | how it was built, the DF documents, the testing guide, the Epic-assets terms |
+| `docs/` | how it was built, the DF field report, the DF documents, the testing guide, the Epic-assets terms |
 | `media/` | the teaser, its preview, the poster and screenshots ([media/README.md](media/README.md)) |
 
 ## Credits and legal
