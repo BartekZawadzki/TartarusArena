@@ -1,0 +1,21 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "Tartarus Arena - a 5v5 MOBA prototype built by Claude with the Dark Factory patterns",
+	"Modules": [
+		{ "Name": "ParagonArena", "Type": "Runtime", "LoadingPhase": "Default", "AdditionalDependencies": [ "Engine", "GameplayAbilities" ] }
+	],
+	"Plugins": [
+		{ "Name": "GameplayAbilities", "Enabled": true },
+		{ "Name": "EnhancedInput", "Enabled": true },
+		{ "Name": "Niagara", "Enabled": true },
+		{ "Name": "Cascade", "Enabled": true },
+		{ "Name": "CascadeToNiagaraConverter", "Enabled": true },
+		{ "Name": "PythonScriptPlugin", "Enabled": true },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true },
+		{ "Name": "ModelContextProtocol", "Enabled": true },
+		{ "Name": "AllToolsets", "Enabled": true },
+		{ "Name": "DFToolset", "Enabled": true }
+	]
+}

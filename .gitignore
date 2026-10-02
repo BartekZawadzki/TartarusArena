@@ -1,0 +1,45 @@
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+.vs/
+*.sln
+*.suo
+*.VC.db
+*.opensdf
+*.sdf
+# Paragon packs are Epic library content added through the launcher: re-addable, large, not ours to version.
+Content/ParagonGreystone/
+Content/ParagonKallari/
+Content/ParagonGideon/
+Content/ParagonTwinblast/
+Content/ParagonMuriel/
+Content/ParagonMinions/
+Content/Paragon*/
+Captures/
+
+# engine template placeholders: recreated by Tools/setup_placeholders.ps1
+Content/Characters/
+Content/LevelPrototyping/
+Content/Variant_Combat/
+Content/Variant_Platforming/
+Build/
+Content/Collections/
+Content/Developers/
+
+# more Epic library content (Paragon Agora sample map, Open World demo): re-addable, not ours to version
+Content/KiteDemo/
+Content/SampleMap/
+Content/Lighting/
+
+# derived from the Paragon packs (non-additive hit reactions): regenerate with Tools/make_hitreacts.py
+Content/Arena/Generated/
+
+# derived from Tools/Blender/*.py (the FBX files are kept: the UE import needs no Blender)
+Tools/Blender/out/*.blend
+Tools/Blender/out/*.blend1
+Tools/__pycache__/
+
+# Python bytecode
+__pycache__/
+*.pyc

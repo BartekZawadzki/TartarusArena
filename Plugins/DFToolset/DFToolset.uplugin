@@ -1,0 +1,27 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1.0",
+	"FriendlyName": "DF Toolset",
+	"Description": "Dark Factory evidence tools for Epic's Unreal MCP: run editor Python, screenshots, list level actors, run automation tests. Python-only toolset registered by Content/Python/init_unreal.py.",
+	"Category": "Editor",
+	"CreatedBy": "DF",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Plugins": [
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "ToolsetRegistry",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelContextProtocol",
+			"Enabled": true
+		}
+	],
+	"EditorOnly": true
+}
