@@ -4,6 +4,7 @@
 // health left. Logs one DUEL line per fight, the win rate per hero and per group; LAB_SUMMARY fails=0 always (a
 // measurement, not a check).
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "AI/ArenaBotController.h"
 #include "Components/CapsuleComponent.h"
@@ -73,7 +74,7 @@ void AArenaGameMode::StartDuelLab()
 	// as "safe" in its own base and was never shot at — every duel up to r12 was skewed towards melee
 	// (moved once the navmesh is up: NavReady looks for it at the bases)
 	GDuel.Centre = TeamBase(1) + FVector(-600.f, 0.f, 0.f);
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=duellab_start pairs=%d from=%d"), GDuel.Pairs.Num(), GDuel.Next);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=duellab_start pairs=%d from=%d"), GDuel.Pairs.Num(), GDuel.Next);
 }
 
 void AArenaGameMode::TickDuelLab(float Now)
@@ -128,7 +129,7 @@ void AArenaGameMode::TickDuelLab(float Now)
 		static const bool bTrace = FParse::Param(FCommandLine::Get(), TEXT("DuelTrace"));
 		if (bTrace && A && B && FMath::FloorToInt(Elapsed) != FMath::FloorToInt(Elapsed - GetWorld()->GetDeltaSeconds()))
 		{
-			UE_LOG(LogArena, Display, TEXT("DUEL_TRACE t=%.0f dist=%.0f A=%s hp=%.0f%% v=%.0f max=%.0f busy=%d stun=%d | B=%s hp=%.0f%% v=%.0f max=%.0f busy=%d stun=%d dz=%.0f"), Elapsed, FVector::Dist2D(A->GetActorLocation(), B->GetActorLocation()),
+			ARENA_LOG(LogArena, Display, TEXT("DUEL_TRACE t=%.0f dist=%.0f A=%s hp=%.0f%% v=%.0f max=%.0f busy=%d stun=%d | B=%s hp=%.0f%% v=%.0f max=%.0f busy=%d stun=%d dz=%.0f"), Elapsed, FVector::Dist2D(A->GetActorLocation(), B->GetActorLocation()),
 				*A->GetDef().Id.ToString(), A->HealthPct() * 100.f, A->GetVelocity().Size2D(), A->GetCharacterMovement()->MaxWalkSpeed, A->IsBusy() ? 1 : 0, A->IsStunned() ? 1 : 0,
 				*B->GetDef().Id.ToString(), B->HealthPct() * 100.f, B->GetVelocity().Size2D(), B->GetCharacterMovement()->MaxWalkSpeed, B->IsBusy() ? 1 : 0, B->IsStunned() ? 1 : 0, B->GetActorLocation().Z - A->GetActorLocation().Z);
 		}
@@ -149,16 +150,16 @@ void AArenaGameMode::TickDuelLab(float Now)
 		Ra.Y += 1; Mb.Y += 1;
 		if (Winner == 0) { Ra.X += 1; } else if (Winner == 1) { Mb.X += 1; }
 		GDuel.TimeSum += Elapsed;
-		UE_LOG(LogArena, Display, TEXT("DUEL ranged=%s melee=%s winner=%s time=%.1f hp_ranged=%.0f%% hp_melee=%.0f%% swap=%d"), *Defs[P.Key].Id.ToString(), *Defs[P.Value].Id.ToString(),
+		ARENA_LOG(LogArena, Display, TEXT("DUEL ranged=%s melee=%s winner=%s time=%.1f hp_ranged=%.0f%% hp_melee=%.0f%% swap=%d"), *Defs[P.Key].Id.ToString(), *Defs[P.Value].Id.ToString(),
 			Winner < 0 ? TEXT("draw") : (Winner == 0 ? TEXT("ranged") : TEXT("melee")), Elapsed, A ? A->HealthPct() * 100.f : 0.f, B ? B->HealthPct() * 100.f : 0.f, GDuel.Swap);
 		// both leave by the ordinary death (destroying a hero mid-ability crashed the engine): the bodies fade out, the
 		// lab does not respawn them
 		for (AArenaCharacter* C : { A, B })
 		{
 			if (!C) { continue; }
-			UE_LOG(LogArena, Display, TEXT("DUEL_END kill %s alive=%d dashing=%d rootmotion=%d"), *C->GetDef().Id.ToString(), C->IsAlive() ? 1 : 0, C->IsDashing() ? 1 : 0, C->IsPlayingRootMotion() ? 1 : 0);
+			ARENA_LOG(LogArena, Display, TEXT("DUEL_END kill %s alive=%d dashing=%d rootmotion=%d"), *C->GetDef().Id.ToString(), C->IsAlive() ? 1 : 0, C->IsDashing() ? 1 : 0, C->IsPlayingRootMotion() ? 1 : 0);
 			C->LabKill();
-			UE_LOG(LogArena, Display, TEXT("DUEL_END killed %s"), *C->GetDef().Id.ToString());
+			ARENA_LOG(LogArena, Display, TEXT("DUEL_END killed %s"), *C->GetDef().Id.ToString());
 			Heroes.Remove(C);
 		}
 		GDuel.A = nullptr; GDuel.B = nullptr;
@@ -171,11 +172,11 @@ void AArenaGameMode::TickDuelLab(float Now)
 		const int32 Fights = GDuel.Wins[0] + GDuel.Wins[1] + GDuel.Draws;
 		for (const TPair<int32, FIntPoint>& H : GDuel.PerHero)
 		{
-			UE_LOG(LogArena, Display, TEXT("DUEL_HERO %-10s %s wins=%d/%d (%.0f%%)"), *Defs[H.Key].Id.ToString(), Defs[H.Key].Abilities[0].Range < 5.f ? TEXT("melee ") : TEXT("ranged"), H.Value.X, H.Value.Y, 100.f * H.Value.X / FMath::Max(1, H.Value.Y));
+			ARENA_LOG(LogArena, Display, TEXT("DUEL_HERO %-10s %s wins=%d/%d (%.0f%%)"), *Defs[H.Key].Id.ToString(), Defs[H.Key].Abilities[0].Range < 5.f ? TEXT("melee ") : TEXT("ranged"), H.Value.X, H.Value.Y, 100.f * H.Value.X / FMath::Max(1, H.Value.Y));
 		}
-		UE_LOG(LogArena, Display, TEXT("DUEL_SUMMARY fights=%d ranged_wins=%d melee_wins=%d draws=%d melee_winrate=%.0f%% avg_time=%.1f s"), Fights, GDuel.Wins[0], GDuel.Wins[1], GDuel.Draws,
+		ARENA_LOG(LogArena, Display, TEXT("DUEL_SUMMARY fights=%d ranged_wins=%d melee_wins=%d draws=%d melee_winrate=%.0f%% avg_time=%.1f s"), Fights, GDuel.Wins[0], GDuel.Wins[1], GDuel.Draws,
 			100.f * GDuel.Wins[1] / FMath::Max(1, GDuel.Wins[0] + GDuel.Wins[1]), GDuel.TimeSum / FMath::Max(1, Fights));
-		UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=0"));
+		ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=0"));
 		LabStep = 3;
 		UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 	}
@@ -205,7 +206,7 @@ void AArenaGameMode::TickSkinDeathLab(float Now)
 		return;
 	case 1:
 	{
-		if (!Defs.IsValidIndex(GSkin.Hero)) { UE_LOG(LogArena, Display, TEXT("SKIN_DEATH_SUMMARY bodies=%d crashes=0"), GSkin.Done); UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=0")); GSkin.Step = 9; UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false); return; }
+		if (!Defs.IsValidIndex(GSkin.Hero)) { ARENA_LOG(LogArena, Display, TEXT("SKIN_DEATH_SUMMARY bodies=%d crashes=0"), GSkin.Done); ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=0")); GSkin.Step = 9; UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false); return; }
 		ForcedSkin = GSkin.Skin;
 		AArenaCharacter* V = SpawnHero(GSkin.Hero, 1, 2, false, 9, 0.f, nullptr);
 		ForcedSkin = -2;
@@ -223,7 +224,7 @@ void AArenaGameMode::TickSkinDeathLab(float Now)
 		if (Now - GSkin.At < 0.5f) { return; }
 		if (AArenaCharacter* V = GSkin.Victim.Get())
 		{
-			UE_LOG(LogArena, Display, TEXT("SKIN_DEATH die hero=%s skin=%d"), *Defs[GSkin.Hero].Id.ToString(), GSkin.Skin);
+			ARENA_LOG(LogArena, Display, TEXT("SKIN_DEATH die hero=%s skin=%d"), *Defs[GSkin.Hero].Id.ToString(), GSkin.Skin);
 			FArenaHit Hit; Hit.Ability = TEXT("lab");
 			V->ReceiveHit(1.e6f, GSkin.Killer.Get(), Hit);
 		}
@@ -232,7 +233,7 @@ void AArenaGameMode::TickSkinDeathLab(float Now)
 		return;
 	case 3:
 		if (Now - GSkin.At < 2.5f) { return; }
-		UE_LOG(LogArena, Display, TEXT("SKIN_DEATH gc hero=%s skin=%d"), *Defs[GSkin.Hero].Id.ToString(), GSkin.Skin);
+		ARENA_LOG(LogArena, Display, TEXT("SKIN_DEATH gc hero=%s skin=%d"), *Defs[GSkin.Hero].Id.ToString(), GSkin.Skin);
 		if (AArenaCharacter* V = GSkin.Victim.Get()) { V->Destroy(); }
 		GEngine->ForceGarbageCollection(true);
 		GSkin.At = Now;
@@ -240,7 +241,7 @@ void AArenaGameMode::TickSkinDeathLab(float Now)
 		return;
 	case 4:
 		if (Now - GSkin.At < 0.5f) { return; }
-		UE_LOG(LogArena, Display, TEXT("SKIN_DEATH ok hero=%s skin=%d"), *Defs[GSkin.Hero].Id.ToString(), GSkin.Skin);
+		ARENA_LOG(LogArena, Display, TEXT("SKIN_DEATH ok hero=%s skin=%d"), *Defs[GSkin.Hero].Id.ToString(), GSkin.Skin);
 		++GSkin.Done;
 		if (++GSkin.Skin >= Defs[GSkin.Hero].Skins.Num()) { GSkin.Skin = -1; ++GSkin.Hero; }
 		GSkin.Step = 1;

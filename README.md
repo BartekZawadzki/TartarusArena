@@ -46,7 +46,7 @@ is met or a decision is the human's. This is how the stages show up in this repo
 |---|---|
 | **Product owner** — vision, requirements as rules, test scenarios | [`01-game-design.md`](docs/dark-factory/01-game-design.md): pillars with numeric targets, 30 validation rules, 14 scenarios; every fact tagged *confirmed by the operator*, *agent's assumption* or *open* |
 | **Solution architect** — data, flows, decisions | [`02-technical-design.md`](docs/dark-factory/02-technical-design.md): the core rules mapped to where and how they are enforced; 14 dated ADRs |
-| **TDD** — the test list *is* the rules | pure rule functions (damage, gold, shop, ranks, the bot brain, Conquest) under 6 automation specs, 17 tests in v1, 51 today |
+| **TDD** — the test list *is* the rules | pure rule functions (damage, gold, shop, ranks, the bot brain, Conquest) under 6 automation specs, 17 tests in v1, 50 today |
 | **QA with evidence** | ~15 in-game *labs* that drive the real game and print `LAB PASS/FAIL`, seeded headless bot matches, the packaged exe re-checked in nearly every release: [`TESTING.md`](docs/TESTING.md) and a QA report per version or pair of versions |
 | **Adversary gate** | a blind, read-only reviewer agent found 13 real defects in the network code; decoy checks prove each gate can fail |
 | **The autonomous loop** | hard stops (publishing, spending, downloads, deleting the owner's data, windows on the owner's desktop) wait for the human; everything else the agent decides and proves |
@@ -55,7 +55,11 @@ The full story, with the timeline of all 22 versions, the numbers, the engineeri
 what is and is not proven: **[docs/BUILT-WITH-CLAUDE.md](docs/BUILT-WITH-CLAUDE.md)**.
 
 **A field test of the method.** What a game adds to DF, which gate caught which defect, where the run deviated from
-the method, twelve conclusions and the options they open: **[docs/DARK-FACTORY-FIELD-REPORT.md](docs/DARK-FACTORY-FIELD-REPORT.md)**.
+the method, eleven conclusions and the options they open: **[docs/DARK-FACTORY-FIELD-REPORT.md](docs/DARK-FACTORY-FIELD-REPORT.md)**.
+
+**Next: an independent holdout test with Argus.** The game is prepared as a system under test for OneDroid's
+[Argus](https://docs.onedroid.ai/argus): the packaged game journals its own evidence as JSON, and a small HTTP harness
+starts its headless checks on request. Ready, not yet tested by Argus: **[docs/ARGUS.md](docs/ARGUS.md)**.
 
 ## Screenshots
 
@@ -84,7 +88,7 @@ script in Blender's sequencer. The cut mixes the director's takes with the opera
 | Maps | 4, all built by Python scripts: Arena, Conquest, Training, Proto |
 | Players | single player with bots (three difficulties), LAN multiplayer (listen server, join by IP, bots fill the rest) |
 | Prototypes | a new game in a grey-box town: third-person action combat, and the same game with Hades-style controls |
-| Verification | 51 automation tests in 6 specs, ~15 self-checking in-game labs, seeded headless bot matches, a packaged-exe check in nearly every release |
+| Verification | 50 automation tests in 6 specs, ~15 self-checking in-game labs, seeded headless bot matches, a packaged-exe check in nearly every release |
 
 ## What you can play
 
@@ -177,6 +181,8 @@ Every feature lands with evidence. The full catalogue is in [docs/TESTING.md](do
 - **Seeded bot matches:** `/Game/Maps/Arena -game -nullrhi -ArenaBotMatch -Seed=1 -Minutes=3 -benchmark -fps=60`
   plays ten bots and prints `ARENA_SUMMARY` (stuck bots, casts, turn snaps, jumps, deaths by cause) and validation-rule
   lines such as `PASS VR-09`.
+- **As a system under test:** `node Tools/ArgusSUT/server.mjs` serves the packaged game's headless checks over HTTP,
+  with `-EvidenceJournal=<id>` journaling every log line as JSON, ready for an Argus tester ([docs/ARGUS.md](docs/ARGUS.md)).
 
 ## Repository layout
 
@@ -187,14 +193,14 @@ Every feature lands with evidence. The full catalogue is in [docs/TESTING.md](do
 | `Source/ParagonArena/GAS`, `Abilities` | attributes, and one data-driven GAS ability (melee, projectile, area, dash, buff) with its projectile and area actors |
 | `Source/ParagonArena/Heroes` | the character (heroes, minions, structures, monsters): camera, status effects, hit-stop, reactions and deaths from the packs' animations, the melee trait |
 | `Source/ParagonArena/AI` | the bot brain (a pure decision function, unit-tested) and the bot controller |
-| `Source/ParagonArena/Game` | game mode and state (phases, waves, Conquest, LAN), the player controller, the labs, the teaser director |
+| `Source/ParagonArena/Game` | game mode and state (phases, waves, Conquest, LAN), the player controller, the labs, the teaser director, the evidence journal |
 | `Source/ParagonArena/UI` | the Canvas HUD and menus, settings, the icon studio (portraits and icons shot from the models in game) |
 | `Source/ParagonArena/Arena` | ability indicators, jump pads, the orb, foliage scatter, effects and explosion physics |
 | `Source/ParagonArena/Proto` | the new-game prototypes (character, bot, two player controllers, HUD, game mode) |
 | `Source/ParagonArena/Tests` | the automation specs |
 | `Content/Data/heroes.json` | every hero, ability, item, structure, camp and rule as data |
 | `Content/Maps`, `Content/Arena` | the four maps, the project's materials and icons |
-| `Tools/` | the map builders and content scripts (Python for the UE editor), Blender scripts, the icon sources, the teaser pipeline |
+| `Tools/` | the map builders and content scripts (Python for the UE editor), Blender scripts, the icon sources, the teaser pipeline, the Argus SUT harness (`Tools/ArgusSUT`) |
 | `docs/` | how it was built, the DF field report, the DF documents, the testing guide, the Epic-assets terms |
 | `media/` | the teaser, its preview, the poster and screenshots ([media/README.md](media/README.md)) |
 

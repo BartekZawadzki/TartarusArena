@@ -7,6 +7,7 @@
 //             closed with a step (lands only with assistance); a swing at an enemy running across in front lands
 // Prints LAB PASS/FAIL lines and LAB_SUMMARY like -ArenaAnimLab; screenshots AIM_*.png.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Game/ArenaPlayerController.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Arena/ArenaIndicator.h"
@@ -105,7 +106,7 @@ void AArenaGameMode::StartAimLab()
 	GAimLab.MarkersAtStart = AArenaHUD::HitMarkersShown;
 	Phase = EArenaPhase::Playing;
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=aimlab_start shooter=%d target=%d"), GAimLab.Shooter.IsValid() ? 1 : 0, GAimLab.Target.IsValid() ? 1 : 0);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=aimlab_start shooter=%d target=%d"), GAimLab.Shooter.IsValid() ? 1 : 0, GAimLab.Target.IsValid() ? 1 : 0);
 }
 
 void AArenaGameMode::TickAimLab(float Now)
@@ -114,7 +115,7 @@ void AArenaGameMode::TickAimLab(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	const TArray<FArenaHeroDef>& Defs = FArenaDatabase::Get().Heroes;
@@ -150,7 +151,7 @@ void AArenaGameMode::TickAimLab(float Now)
 			++P.Hits; ++GAimLab.PlayerHits;
 			// the body flashes on the same frame the hit lands
 			GAimLab.bFlashSeen |= Tg->GetMesh()->GetOverlayMaterial() != nullptr;
-			UE_LOG(LogArena, Display, TEXT("LAB aim hit phase=%d t=%.2f shots=%d hits=%d"), Idx, T, P.Shots, P.Hits);
+			ARENA_LOG(LogArena, Display, TEXT("LAB aim hit phase=%d t=%.2f shots=%d hits=%d"), Idx, T, P.Shots, P.Hits);
 			if (Idx == 1 && !GAimLab.bHitShot && P.Shots >= 6) { GAimLab.bHitShot = true; UIShot(TEXT("AIM_Hit")); }
 		}
 		// the shot lane (the basic attack's indicator, drawn here for the check) points where the shot will go
@@ -164,7 +165,7 @@ void AArenaGameMode::TickAimLab(float Now)
 				const float Err = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp((float)FVector::DotProduct(Want, Got), -1.f, 1.f)));
 				if (Err > GAimLab.LaneWorst)
 				{
-					UE_LOG(LogArena, Display, TEXT("LAB lane t=%.2f dt=%.3f err=%.1f want=%.1f got=%.1f vel=%.0f"), T, GetWorld()->GetDeltaSeconds(), Err, Want.Rotation().Yaw, Got.Rotation().Yaw, Tg->GetVelocity().X);
+					ARENA_LOG(LogArena, Display, TEXT("LAB lane t=%.2f dt=%.3f err=%.1f want=%.1f got=%.1f vel=%.0f"), T, GetWorld()->GetDeltaSeconds(), Err, Want.Rotation().Yaw, Got.Rotation().Yaw, Tg->GetVelocity().X);
 				}
 				GAimLab.LaneWorst = FMath::Max(GAimLab.LaneWorst, Err);
 				++GAimLab.LaneSamples;
@@ -188,7 +189,7 @@ void AArenaGameMode::TickAimLab(float Now)
 		{
 			const int32 Markers = AArenaHUD::HitMarkersShown - P.Markers0;
 			const float Rate = (float)P.Hits / FMath::Max(1, P.Shots);
-			UE_LOG(LogArena, Display, TEXT("LAB aim phase=%d assist=%d shots=%d hits=%d rate=%.2f markers=%d picked=%.2f"), Idx, Idx, P.Shots, P.Hits, Rate, Markers, (float)P.Picked / FMath::Max(1, P.Ticks));
+			ARENA_LOG(LogArena, Display, TEXT("LAB aim phase=%d assist=%d shots=%d hits=%d rate=%.2f markers=%d picked=%.2f"), Idx, Idx, P.Shots, P.Hits, Rate, Markers, (float)P.Picked / FMath::Max(1, P.Ticks));
 			Check(Markers == P.Hits, FString::Printf(TEXT("one hit marker per landed shot (assistance %s): %d markers, %d hits"), Idx ? TEXT("on") : TEXT("off"), Markers, P.Hits));
 			if (Idx == 0)
 			{
@@ -378,12 +379,12 @@ void AArenaGameMode::TickAimLab(float Now)
 		if (T > GAimLab.StepT + 0.5f)
 		{
 			const int32 Markers = AArenaHUD::HitMarkersShown - GAimLab.MarkersAtStart;
-			UE_LOG(LogArena, Display, TEXT("LAB aim markers=%d player_hits_shots=%d"), Markers, GAimLab.PlayerHits);
+			ARENA_LOG(LogArena, Display, TEXT("LAB aim markers=%d player_hits_shots=%d"), Markers, GAimLab.PlayerHits);
 			LabStep = 20;
 		}
 		break;
 	case 20:
-		UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+		ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 		SetAssist(1);
 		++LabStep;
 		UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);

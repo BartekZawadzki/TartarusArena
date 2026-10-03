@@ -1,0 +1,17 @@
+# The SUT's compose project for Argus's local Docker Compose tier. The game is a Windows program and runs on the host
+# (the harness, server.mjs, starts it); this project gives Argus what it reads from a compose project: a network for
+# its execution plane to join, and a container whose output is the SUT's log (every line JSON, carrying requestId).
+#
+#   SUT_DATA_DIR=<repo>/Saved/ArgusSUT docker compose -f Tools/ArgusSUT/compose.yaml up -d
+#
+# The executor reaches the harness at http://host.docker.internal:8787 (see argus-config.example.yaml).
+# The image is a public one (busybox) and is pulled on the first `up`.
+name: tartarus-sut
+
+services:
+  sut-log:
+    image: busybox:1.37
+    command: ["tail", "-n", "0", "-F", "/logs/sut.jsonl"]   # -F waits for the file and follows it across restarts
+    volumes:
+      - ${SUT_DATA_DIR:-../../Saved/ArgusSUT}:/logs:ro
+    restart: unless-stopped

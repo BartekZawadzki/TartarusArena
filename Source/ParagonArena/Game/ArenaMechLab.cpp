@@ -6,6 +6,7 @@
 // -ArenaCamShots=<file>: one screenshot per line "name x y z pitch yaw fov" (map review, CAM_<name>.png).
 // Both print LAB PASS/FAIL lines and LAB_SUMMARY like -ArenaAnimLab.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "AI/ArenaBotController.h"
 #include "AI/ArenaBotBrain.h"
@@ -88,7 +89,7 @@ void AArenaGameMode::StartMechLab()
 		if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) { PC->SetViewTarget(Cam); }
 	}
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=mechlab_start heroes=%d"), LabUnits.Num());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=mechlab_start heroes=%d"), LabUnits.Num());
 }
 
 void AArenaGameMode::TickMechLab(float Now)
@@ -97,7 +98,7 @@ void AArenaGameMode::TickMechLab(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	TArray<AArenaCharacter*> U;
 	for (const TWeakObjectPtr<AArenaCharacter>& W : LabUnits) { if (W.IsValid()) { U.Add(W.Get()); } }
@@ -292,7 +293,7 @@ void AArenaGameMode::TickMechLab(float Now)
 			if (FMath::Fmod(T, 0.5f) < 0.02f)
 			{
 				const AArenaBotController* AI = Cast<AArenaBotController>(Duelist->GetController());
-				UE_LOG(LogArena, Display, TEXT("LAB duel t=%.2f dist=%.0f ready0=%d cd0=%.2f stunned=%d busy=%d dil=%.2f mode=%d move=%d dummyZ=%.0f alive=%d"), T, FVector::Dist(Duelist->GetActorLocation(), Dummy->GetActorLocation()),
+				ARENA_LOG(LogArena, Display, TEXT("LAB duel t=%.2f dist=%.0f ready0=%d cd0=%.2f stunned=%d busy=%d dil=%.2f mode=%d move=%d dummyZ=%.0f alive=%d"), T, FVector::Dist(Duelist->GetActorLocation(), Dummy->GetActorLocation()),
 					Duelist->CanCastSlot(0) ? 1 : 0, Duelist->CooldownRemaining(0), Duelist->IsStunned() ? 1 : 0, Duelist->IsBusy() ? 1 : 0, Duelist->CustomTimeDilation, (int32)Duelist->GetCharacterMovement()->MovementMode, AI ? (int32)AI->GetMoveStatus() : -1, Dummy->GetActorLocation().Z, Dummy->IsAlive() ? 1 : 0);
 			}
 			if (Duelist->SlotCasts[0] > LastCasts)
@@ -318,7 +319,7 @@ void AArenaGameMode::TickMechLab(float Now)
 	case 7:
 		if (T > 32.5f)
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			++LabStep;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}
@@ -341,7 +342,7 @@ void AArenaGameMode::StartCamShots(const FString& File)
 		CamFovs.Add(P.Num() > 6 ? FCString::Atof(*P[6]) : 80.f);
 	}
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=camshots file=%s cams=%d"), *File, CamNames.Num());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=camshots file=%s cams=%d"), *File, CamNames.Num());
 }
 
 void AArenaGameMode::TickCamShots(float Now)

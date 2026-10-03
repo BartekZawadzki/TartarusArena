@@ -2,6 +2,7 @@
 // (heals its team, burns an enemy hero), potions (bought only at the base, healing their amount over their time).
 // Prints LAB PASS/FAIL and LAB_SUMMARY like the other labs; screenshot BASE_Recall.png (the recall bar).
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Game/ArenaPlayerController.h"
 #include "Heroes/ArenaCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -47,7 +48,7 @@ void AArenaGameMode::StartBaseLab()
 	bFountainsOn = true;
 	Phase = EArenaPhase::Playing;
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=baselab_start"));
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=baselab_start"));
 }
 
 void AArenaGameMode::TickBaseLab(float Now)
@@ -56,7 +57,7 @@ void AArenaGameMode::TickBaseLab(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	AArenaCharacter* H = GBaseLab.H.Get();
 	AArenaCharacter* E = GBaseLab.E.Get();
@@ -146,7 +147,7 @@ void AArenaGameMode::TickBaseLab(float Now)
 			{
 				H->ReceiveDamage(H->GetMaxHealth() * 0.05f, nullptr, false);
 			}
-			UE_LOG(LogArena, Display, TEXT("LAB potion setup hp=%.0f/%.0f alive=%d"), H->GetHealth(), H->GetMaxHealth(), H->IsAlive() ? 1 : 0);
+			ARENA_LOG(LogArena, Display, TEXT("LAB potion setup hp=%.0f/%.0f alive=%d"), H->GetHealth(), H->GetMaxHealth(), H->IsAlive() ? 1 : 0);
 			GBaseLab.StepT = T;
 			++LabStep;
 		}
@@ -158,7 +159,7 @@ void AArenaGameMode::TickBaseLab(float Now)
 		{
 			GBaseLab.RegenRate = (H->GetHealth() - GBaseLab.HpA) / FMath::Max(0.1f, T - GBaseLab.RegenRate);
 			GBaseLab.Hp0 = H->GetHealth();
-			UE_LOG(LogArena, Display, TEXT("LAB potion drink hp=%.0f hpA=%.0f regen=%.1f"), H->GetHealth(), GBaseLab.HpA, GBaseLab.RegenRate);
+			ARENA_LOG(LogArena, Display, TEXT("LAB potion drink hp=%.0f hpA=%.0f regen=%.1f"), H->GetHealth(), GBaseLab.HpA, GBaseLab.RegenRate);
 			Check(H->DrinkPotion(0) && H->Potions[0] == 1 && !H->DrinkPotion(0), TEXT("a potion is drunk (one at a time)"));
 			GBaseLab.StepT = T;
 			++LabStep;
@@ -213,7 +214,7 @@ void AArenaGameMode::TickBaseLab(float Now)
 	case 90:
 		if (T > GBaseLab.StepT + 0.5f)
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			++LabStep;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}

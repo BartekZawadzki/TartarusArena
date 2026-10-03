@@ -1,4 +1,5 @@
 #include "Proto/ProtoCharacter.h"
+#include "Game/ArenaEvidence.h"
 #include "Proto/ProtoGameMode.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -711,7 +712,7 @@ float AProtoCharacter::TakeBlow(float Damage, AProtoCharacter* Source, float Kno
 			CounterUntil = Now + T.CounterTime;
 			Source->StaggerUntil = FMath::Max(Source->StaggerUntil, Now + 0.35f);
 			Numbers.Add({ GetActorLocation() + FVector(0.f, 0.f, 130.f), 0.f, Now, 5 });
-			UE_LOG(LogProto, Display, TEXT("PROTO t=%.2f evt=perfect_dodge who=%s from=%s"), Now, *GetName(), *Source->GetName());
+			ARENA_LOG(LogProto, Display, TEXT("PROTO t=%.2f evt=perfect_dodge who=%s from=%s"), Now, *GetName(), *Source->GetName());
 			if (!bIsBot) { SlowMo(); }
 		}
 		else { Numbers.Add({ GetActorLocation() + FVector(0.f, 0.f, 110.f), 0.f, Now, 4 }); }
@@ -736,7 +737,7 @@ float AProtoCharacter::TakeBlow(float Damage, AProtoCharacter* Source, float Kno
 	AlertedAt = Now;
 	Numbers.Add({ GetActorLocation() + FVector(FMath::FRandRange(-30.f, 30.f), 0.f, 110.f), Damage, Now, NumberKind });
 	if (Numbers.Num() > 64) { Numbers.RemoveAt(0, Numbers.Num() - 64); }
-	UE_LOG(LogProto, Display, TEXT("PROTO t=%.2f evt=hit what=%s from=%s to=%s dmg=%.1f kind=%d hp=%.0f"), Now, What, Source ? *Source->GetName() : TEXT("-"), *GetName(), Damage, (int32)Kind, Health);
+	ARENA_LOG(LogProto, Display, TEXT("PROTO t=%.2f evt=hit what=%s from=%s to=%s dmg=%.1f kind=%d hp=%.0f"), Now, What, Source ? *Source->GetName() : TEXT("-"), *GetName(), Damage, (int32)Kind, Health);
 	// a blow interrupts: the swing, the charge, the combo
 	GetWorldTimerManager().ClearTimer(HitTimer);
 	GetWorldTimerManager().ClearTimer(ComboTimer);
@@ -837,14 +838,14 @@ bool AProtoCharacter::TryMantle()
 		const FVector From = Feet + FVector(0.f, 0.f, Up);
 		if (GetWorld()->LineTraceSingleByChannel(Wall, From, From + Fwd * (Rad + 60.f), ECC_Visibility, Q) && FMath::Abs(Wall.ImpactNormal.Z) < 0.3f) { bWall = true; break; }
 	}
-	if (!bWall) { if (bDebugMantle) { UE_LOG(LogProto, Display, TEXT("PROTO dbg mantle: no wall feet=%.0f vz=%.0f"), Feet.Z, M->Velocity.Z); } return false; }
+	if (!bWall) { if (bDebugMantle) { ARENA_LOG(LogProto, Display, TEXT("PROTO dbg mantle: no wall feet=%.0f vz=%.0f"), Feet.Z, M->Velocity.Z); } return false; }
 	// the top: down from above the reach, just past the wall's face
 	const FVector Over = Wall.ImpactPoint + Fwd * (Rad + 15.f);
 	FHitResult Top;
 	if (!GetWorld()->LineTraceSingleByChannel(Top, FVector(Over.X, Over.Y, Feet.Z + T.MantleReach + 60.f), FVector(Over.X, Over.Y, Feet.Z - 30.f), ECC_Visibility, Q)) { return false; }
 	if (!Top.bBlockingHit || Top.ImpactNormal.Z < 0.7f) { return false; }
 	const float Rise = Top.ImpactPoint.Z - Feet.Z;
-	if (bDebugMantle) { UE_LOG(LogProto, Display, TEXT("PROTO dbg mantle: feet=%.0f top=%.0f rise=%.0f"), Feet.Z, Top.ImpactPoint.Z, Rise); }
+	if (bDebugMantle) { ARENA_LOG(LogProto, Display, TEXT("PROTO dbg mantle: feet=%.0f top=%.0f rise=%.0f"), Feet.Z, Top.ImpactPoint.Z, Rise); }
 	if (Rise < 0.f || Rise > T.MantleReach) { return false; }
 	const FVector Dest = FVector(Over.X, Over.Y, Top.ImpactPoint.Z + Half + 3.f);
 	FHitResult Block;

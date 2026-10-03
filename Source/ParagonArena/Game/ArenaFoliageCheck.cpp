@@ -5,6 +5,7 @@
 // geometry. Floor tiles and the pitched balustrade caps are left out (they are laid on surfaces by construction).
 // Prints FOLIAGE lines per mesh, the worst cases, and FOLIAGE_SUMMARY floating=N buried=M checked=K; then quits.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Arena/ArenaScatter.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
@@ -50,14 +51,14 @@ void AArenaGameMode::RunFoliageCheck()
 			else if (bInside && !Sc->bCollide) { ++U; Issues.Add({ Name, Base, Gap, true }); }   // rocks and trees are sunk into the ground on purpose
 		}
 		Checked += N; Floating += F; Buried += U;
-		if (N > 0) { UE_LOG(LogArena, Display, TEXT("FOLIAGE mesh=%s checked=%d floating=%d buried=%d"), *Name, N, F, U); }
+		if (N > 0) { ARENA_LOG(LogArena, Display, TEXT("FOLIAGE mesh=%s checked=%d floating=%d buried=%d"), *Name, N, F, U); }
 	}
 	Issues.Sort([](const FFoliageIssue& X, const FFoliageIssue& Y) { return X.Gap > Y.Gap; });
 	for (int32 i = 0; i < Issues.Num() && i < 60; ++i)
 	{
 		const FFoliageIssue& I = Issues[i];
-		UE_LOG(LogArena, Display, TEXT("FOLIAGE issue %s mesh=%s at=(%.0f, %.0f, %.0f) gap=%.0f"), I.bBuried ? TEXT("buried") : TEXT("floating"), *I.Mesh, I.At.X, I.At.Y, I.At.Z, I.Gap);
+		ARENA_LOG(LogArena, Display, TEXT("FOLIAGE issue %s mesh=%s at=(%.0f, %.0f, %.0f) gap=%.0f"), I.bBuried ? TEXT("buried") : TEXT("floating"), *I.Mesh, I.At.X, I.At.Y, I.At.Z, I.Gap);
 	}
-	UE_LOG(LogArena, Display, TEXT("FOLIAGE_SUMMARY floating=%d buried=%d checked=%d"), Floating, Buried, Checked);
+	ARENA_LOG(LogArena, Display, TEXT("FOLIAGE_SUMMARY floating=%d buried=%d checked=%d"), Floating, Buried, Checked);
 	UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 }

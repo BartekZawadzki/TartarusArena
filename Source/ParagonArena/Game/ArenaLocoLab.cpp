@@ -4,6 +4,7 @@
 // and the blueprint's own variables once per phase (LOCO_VARS), and takes LOCO_*.png screenshots from a side camera.
 // A measurement, not a check: LAB_SUMMARY fails=0.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimClassInterface.h"
@@ -101,12 +102,12 @@ namespace
 	void DumpAnimBlueprint(const FString& Path)
 	{
 		UAnimBlueprint* BP = LoadObject<UAnimBlueprint>(nullptr, *Path);
-		if (!BP) { UE_LOG(LogArena, Display, TEXT("ABP_DUMP missing %s"), *Path); return; }
+		if (!BP) { ARENA_LOG(LogArena, Display, TEXT("ABP_DUMP missing %s"), *Path); return; }
 		TArray<UEdGraph*> Graphs;
 		BP->GetAllGraphs(Graphs);
 		for (UEdGraph* G : Graphs)
 		{
-			UE_LOG(LogArena, Display, TEXT("ABP_GRAPH %s nodes=%d"), *G->GetName(), G->Nodes.Num());
+			ARENA_LOG(LogArena, Display, TEXT("ABP_GRAPH %s nodes=%d"), *G->GetName(), G->Nodes.Num());
 			for (UEdGraphNode* N : G->Nodes)
 			{
 				if (!N) { continue; }
@@ -120,7 +121,7 @@ namespace
 					Pins += FString::Printf(TEXT(" [%s%s=%s%s]"), P->Direction == EGPD_Input ? TEXT("in:") : TEXT("out:"), *P->PinName.ToString(),
 						P->DefaultObject ? *P->DefaultObject->GetName() : *P->DefaultValue, Links.IsEmpty() ? TEXT("") : *(TEXT(" ->") + Links));
 				}
-				UE_LOG(LogArena, Display, TEXT("ABP_NODE %s | %s | %s |%s"), *G->GetName(), *N->GetName(), *N->GetNodeTitle(ENodeTitleType::ListView).ToString().Replace(TEXT("\n"), TEXT(" ")), *Pins);
+				ARENA_LOG(LogArena, Display, TEXT("ABP_NODE %s | %s | %s |%s"), *G->GetName(), *N->GetName(), *N->GetNodeTitle(ENodeTitleType::ListView).ToString().Replace(TEXT("\n"), TEXT(" ")), *Pins);
 			}
 		}
 	}
@@ -165,7 +166,7 @@ void AArenaGameMode::TickLocoLab(float Now)
 	{
 		if (!GLoco.Heroes.IsValidIndex(GLoco.Hero))
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=0"));
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=0"));
 			LabStep = 2;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 			return;
@@ -207,14 +208,14 @@ void AArenaGameMode::TickLocoLab(float Now)
 		GLoco.SpeedSum += V; ++GLoco.Samples;
 		if (States != GLoco.LastStates)
 		{
-			UE_LOG(LogArena, Display, TEXT("LOCO_STATE hero=%s phase=%s t=%.2f v=%.0f acc=%.0f anim=%s%s"), *Id, P.Name, InPhase, V, H->GetCharacterMovement()->GetCurrentAcceleration().Size2D(), *Inst->GetClass()->GetName(), *Names);
+			ARENA_LOG(LogArena, Display, TEXT("LOCO_STATE hero=%s phase=%s t=%.2f v=%.0f acc=%.0f anim=%s%s"), *Id, P.Name, InPhase, V, H->GetCharacterMovement()->GetCurrentAcceleration().Size2D(), *Inst->GetClass()->GetName(), *Names);
 			GLoco.StateChanges += GLoco.LastStates.Num() > 0 ? 1 : 0;
 			GLoco.LastStates = States;
 		}
 		if (!GLoco.bVars && InPhase > P.Seconds * 0.5f)
 		{
 			GLoco.bVars = true;
-			UE_LOG(LogArena, Display, TEXT("LOCO_VARS hero=%s phase=%s v=%.0f%s"), *Id, P.Name, V, *LocoVars(Inst));
+			ARENA_LOG(LogArena, Display, TEXT("LOCO_VARS hero=%s phase=%s v=%.0f%s"), *Id, P.Name, V, *LocoVars(Inst));
 		}
 	}
 	if (P.bShot && !GLoco.bShotDone && InPhase > (P.ShotAt >= 0.f ? P.ShotAt : FMath::Min(0.35f, P.Seconds * 0.3f)))
@@ -223,7 +224,7 @@ void AArenaGameMode::TickLocoLab(float Now)
 		UIShot(*FString::Printf(TEXT("LOCO_%s_%s"), *Id, P.Name));
 	}
 	if (InPhase < P.Seconds) { return; }
-	UE_LOG(LogArena, Display, TEXT("LOCO_PHASE hero=%s phase=%s avg_v=%.0f peak_v=%.0f state_changes=%d"), *Id, P.Name, GLoco.SpeedSum / FMath::Max(1, GLoco.Samples), GLoco.PeakSpeed, GLoco.StateChanges);
+	ARENA_LOG(LogArena, Display, TEXT("LOCO_PHASE hero=%s phase=%s avg_v=%.0f peak_v=%.0f state_changes=%d"), *Id, P.Name, GLoco.SpeedSum / FMath::Max(1, GLoco.Samples), GLoco.PeakSpeed, GLoco.StateChanges);
 	GLoco.PeakSpeed = GLoco.SpeedSum = 0.f; GLoco.Samples = 0; GLoco.StateChanges = 0;
 	++GLoco.Phase;
 	GLoco.PhaseAt = Now;

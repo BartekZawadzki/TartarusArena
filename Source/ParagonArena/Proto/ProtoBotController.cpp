@@ -1,4 +1,5 @@
 #include "Proto/ProtoBotController.h"
+#include "Game/ArenaEvidence.h"
 #include "Proto/ProtoCharacter.h"
 #include "Proto/ProtoGameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -99,7 +100,7 @@ void AProtoBotController::Tick(float DeltaSeconds)
 	const bool bSees = T && Sees(Self, T);
 	if (bSees || (T && Now - Self->LastHitAt < 1.f && Self->LastAttacker.Get() == T))
 	{
-		if (!Self->bAlerted) { UE_LOG(LogProtoBot, Display, TEXT("PROTO t=%.1f evt=spotted bot=%s dist=%.0f sneaking=%d"), Now, *Self->GetName(), FVector::Dist(Self->GetActorLocation(), T->GetActorLocation()), T->bSneaking ? 1 : 0); }
+		if (!Self->bAlerted) { ARENA_LOG(LogProtoBot, Display, TEXT("PROTO t=%.1f evt=spotted bot=%s dist=%.0f sneaking=%d"), Now, *Self->GetName(), FVector::Dist(Self->GetActorLocation(), T->GetActorLocation()), T->bSneaking ? 1 : 0); }
 		LastSeen = Now;
 		LastKnown = T->GetActorLocation();
 		Self->bAlerted = true;

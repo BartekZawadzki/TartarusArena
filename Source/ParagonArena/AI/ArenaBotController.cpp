@@ -1,4 +1,5 @@
 #include "AI/ArenaBotController.h"
+#include "Game/ArenaEvidence.h"
 #include "AI/ArenaBotBrain.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Game/ArenaGameMode.h"
@@ -37,7 +38,7 @@ void AArenaBotController::Tick(float DeltaSeconds)
 		++StuckEpisodes;
 		++GM->StuckTotal;
 		const FFindFloorResult& Fl = Me->GetCharacterMovement()->CurrentFloor;
-		UE_LOG(LogArena, Warning, TEXT("ARENA t=%.1f evt=stuck id=%s pos=%s mode=%d speed=%.0f maxspeed=%.0f accel=%.0f dil=%.2f floor=%s goal=%s goaldist=%.0f retreat=%d busy=%d ignoremove=%d pathpts=%d pathidx=%d anim=%d"), Now, *Me->GetDef().Id.ToString(), *Me->GetActorLocation().ToCompactString(),
+		ARENA_LOG(LogArena, Warning, TEXT("ARENA t=%.1f evt=stuck id=%s pos=%s mode=%d speed=%.0f maxspeed=%.0f accel=%.0f dil=%.2f floor=%s goal=%s goaldist=%.0f retreat=%d busy=%d ignoremove=%d pathpts=%d pathidx=%d anim=%d"), Now, *Me->GetDef().Id.ToString(), *Me->GetActorLocation().ToCompactString(),
 			(int32)Me->GetCharacterMovement()->MovementMode, Me->GetVelocity().Size2D(), Me->GetCharacterMovement()->MaxWalkSpeed, Me->GetCharacterMovement()->GetCurrentAcceleration().Size(), Me->CustomTimeDilation,
 			Fl.HitResult.GetActor() ? *Fl.HitResult.GetActor()->GetName() : TEXT("none"), *LastMoveTo.ToCompactString(), FVector::Dist2D(LastMoveTo, Me->GetActorLocation()), bLastRetreat ? 1 : 0, Me->IsBusy() ? 1 : 0, IsMoveInputIgnored() ? 1 : 0,
 			GetPathFollowingComponent() && GetPathFollowingComponent()->GetPath().IsValid() ? GetPathFollowingComponent()->GetPath()->GetPathPoints().Num() : -1,
@@ -59,7 +60,7 @@ void AArenaBotController::Tick(float DeltaSeconds)
 				&& FVector::Dist2D(On.Location, Me->GetActorLocation()) > 20.f)
 			{
 				Me->SetActorLocation(On.Location + FVector(0.f, 0.f, Half + 2.f), false, nullptr, ETeleportType::TeleportPhysics);
-				UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=unstick_step id=%s"), Now, *Me->GetDef().Id.ToString());
+				ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=unstick_step id=%s"), Now, *Me->GetDef().Id.ToString());
 				UnstickTries = 0;
 			}
 			// head-on with another unit (two heroes meeting at the orb): step aside, alternating left and right
@@ -70,7 +71,7 @@ void AArenaBotController::Tick(float DeltaSeconds)
 				|| Nav->GetRandomReachablePointInRadius(Me->GetActorLocation(), 500.f, Side)) { MoveToLocation(Side.Location, 50.f, true, true, false, true); }
 		}
 		NextThink = Now + 0.8f;
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=unstick id=%s"), Now, *Me->GetDef().Id.ToString());
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=unstick id=%s"), Now, *Me->GetDef().Id.ToString());
 		return;
 	}
 
@@ -274,7 +275,7 @@ void AArenaBotController::Tick(float DeltaSeconds)
 		&& (Me->Gold >= 1400.f || (S.ManaPct < 0.1f && S.Slots[1].ManaCost > 0.f && (S.HpPct < 0.7f || Me->Gold >= 900.f)) || (S.HpPct < 0.45f && Me->Potions[0] == 0));
 	if (bShopRun && FVector::Dist2D(S.Self, S.Base) > 2800.f && !S.bInEnemyBase && Me->StartRecall())
 	{
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=bot_recall id=%s why=%s gold=%.0f mana=%.0f%% hp=%.0f%%"), Now, *Me->GetDef().Id.ToString(),
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=bot_recall id=%s why=%s gold=%.0f mana=%.0f%% hp=%.0f%%"), Now, *Me->GetDef().Id.ToString(),
 			Me->Gold >= 1400.f ? TEXT("shop") : (S.ManaPct < 0.1f ? TEXT("mana") : TEXT("health")), Me->Gold, S.ManaPct * 100.f, S.HpPct * 100.f);
 		StopMovement();
 		return;
@@ -480,7 +481,7 @@ void AArenaBotController::TickMonster(AArenaCharacter* Me, AArenaGameMode* GM, f
 		ClearFocus(EAIFocusPriority::Gameplay);
 		MoveToLocation(Home, 60.f, false, true, false, true);
 		NextThink = Now + 0.6f;
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=leash id=%s from_home=%.0f"), Now, *Me->GetDef().Id.ToString(), FromHome);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=leash id=%s from_home=%.0f"), Now, *Me->GetDef().Id.ToString(), FromHome);
 		return;
 	}
 	if (!F || Now < NextThink) { return; }

@@ -1,4 +1,5 @@
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
@@ -48,7 +49,7 @@ static FAutoConsoleCommandWithWorld GArenaStatus(TEXT("Arena.Status"), TEXT("Pri
 		{
 			int32 Alive = 0;
 			for (TActorIterator<AArenaCharacter> It(World); It; ++It) { Alive += It->IsAlive() ? 1 : 0; }
-			UE_LOG(LogArena, Display, TEXT("ARENA_STATUS phase=%d score=%d/%d alive=%d t=%.1f left=%.0f"), (int32)GM->Phase, GM->Score.Points[0], GM->Score.Points[1], Alive, World->GetTimeSeconds(), GM->TimeLeft());
+			ARENA_LOG(LogArena, Display, TEXT("ARENA_STATUS phase=%d score=%d/%d alive=%d t=%.1f left=%.0f"), (int32)GM->Phase, GM->Score.Points[0], GM->Score.Points[1], Alive, World->GetTimeSeconds(), GM->TimeLeft());
 		}
 	}));
 
@@ -81,7 +82,7 @@ void AArenaGameMode::BeginPlay()
 		FString StartMap;
 		if (FParse::Value(FCommandLine::Get(), TEXT("ArenaStartMap="), StartMap) && !GetWorld()->GetMapName().Contains(StartMap))
 		{
-			UE_LOG(LogArena, Display, TEXT("ARENA evt=start_map to=%s"), *StartMap);
+			ARENA_LOG(LogArena, Display, TEXT("ARENA evt=start_map to=%s"), *StartMap);
 			FTimerHandle Th;
 			GetWorldTimerManager().SetTimer(Th, FTimerDelegate::CreateWeakLambda(this, [this, StartMap]() { UGameplayStatics::OpenLevel(this, FName(*(TEXT("/Game/Maps/") + StartMap)), true, TEXT("")); }), 0.2f, false);
 			return;
@@ -101,7 +102,7 @@ void AArenaGameMode::BeginPlay()
 			if (It->PlayerStartTag == TEXT("BaseB")) { BaseB = It->GetActorLocation(); }
 		}
 		bFountainsOn = true;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=client_mirror"));
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=client_mirror"));
 		return;
 	}
 
@@ -124,7 +125,7 @@ void AArenaGameMode::BeginPlay()
 		L.Value.Sort([](const TPair<int32, FVector>& A, const TPair<int32, FVector>& B) { return A.Key < B.Key; });
 		TArray<FVector>& Path = Lanes.AddDefaulted_GetRef();
 		for (const TPair<int32, FVector>& P : L.Value) { Path.Add(P.Value); }
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=lane name=%s points=%d"), *L.Key, Path.Num());
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=lane name=%s points=%d"), *L.Key, Path.Num());
 	}
 	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
 	{
@@ -164,7 +165,7 @@ void AArenaGameMode::BeginPlay()
 	for (TActorIterator<ACameraActor> It(GetWorld()); It; ++It) { if (It->GetCameraComponent()) { It->GetCameraComponent()->SetConstraintAspectRatio(false); } }
 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) { if (Cam) { PC->SetViewTarget(Cam); } }
 	PhaseStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA t=0 evt=boot heroes=%d botmatch=%d seed=%d"), FArenaDatabase::Get().Heroes.Num(), bBotMatch ? 1 : 0, Seed);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=0 evt=boot heroes=%d botmatch=%d seed=%d"), FArenaDatabase::Get().Heroes.Num(), bBotMatch ? 1 : 0, Seed);
 	bUIDemo = FParse::Param(Cmd, TEXT("ArenaUIDemo"));
 	// -ArenaNoHorizon: the ring of cliffs past the forest hidden (an A/B of its rendering cost)
 	if (FParse::Param(Cmd, TEXT("ArenaNoHorizon")))
@@ -175,7 +176,7 @@ void AArenaGameMode::BeginPlay()
 			const UStaticMesh* M = It->GetStaticMeshComponent() ? It->GetStaticMeshComponent()->GetStaticMesh() : nullptr;
 			if (M && M->GetName() == TEXT("SM_Cliff01") && It->GetActorLocation().Size2D() > 15000.f) { It->SetActorHiddenInGame(true); ++Hidden; }
 		}
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=no_horizon hidden=%d"), Hidden);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=no_horizon hidden=%d"), Hidden);
 	}
 	if (bUIDemo) { bBotMatch = true; }
 	// loose props: damped, capped spin, gentle depenetration (nothing pops out of an overlap into the sky)
@@ -236,11 +237,11 @@ void AArenaGameMode::BeginPlay()
 
 void AArenaGameMode::TickNetTestHost(float Now)
 {
-	auto Check = [this](bool bOk, const FString& What) { LabFails += bOk ? 0 : 1; UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What); };
+	auto Check = [this](bool bOk, const FString& What) { LabFails += bOk ? 0 : 1; ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What); };
 	switch (NetTestStep)
 	{
 	case 0:
-		if (RemoteHumans.Num() > 0) { NetTestAt = Now; NetTestStep = 1; UE_LOG(LogArena, Display, TEXT("ARENA evt=nettest_guest_joined")); }
+		if (RemoteHumans.Num() > 0) { NetTestAt = Now; NetTestStep = 1; ARENA_LOG(LogArena, Display, TEXT("ARENA evt=nettest_guest_joined")); }
 		else if (Now > 120.f) { Check(false, TEXT("a LAN guest joined within 2 minutes")); NetTestStep = 9; NetTestAt = Now; }
 		break;
 	case 1:
@@ -256,7 +257,7 @@ void AArenaGameMode::TickNetTestHost(float Now)
 		{
 			if (const AArenaCharacter* GH = Cast<AArenaCharacter>(RemoteHumans[0].PC->GetPawn()))
 			{
-				UE_LOG(LogArena, Display, TEXT("ARENA evt=nethost_guestpos t=%.0f at=%s aim=%s target=%s casts=%d"), Now - MatchStart, *GH->GetActorLocation().ToCompactString(), *GH->AimPoint.ToCompactString(),
+				ARENA_LOG(LogArena, Display, TEXT("ARENA evt=nethost_guestpos t=%.0f at=%s aim=%s target=%s casts=%d"), Now - MatchStart, *GH->GetActorLocation().ToCompactString(), *GH->AimPoint.ToCompactString(),
 					GH->AimTarget.IsValid() ? *GH->AimTarget->GetDef().Id.ToString() : TEXT("none"), GH->SlotCasts[0]);
 			}
 		}
@@ -277,7 +278,7 @@ void AArenaGameMode::TickNetTestHost(float Now)
 	case 9:
 		if (Now - NetTestAt > 15.f)
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			NetTestStep = 10;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}
@@ -340,7 +341,7 @@ void AArenaGameMode::PreloadAssets()
 		}
 	}
 	PreloadMs = (FPlatformTime::Seconds() - T0) * 1000.0;
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=preload assets=%d ms=%.0f"), Loaded, PreloadMs);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=preload assets=%d ms=%.0f"), Loaded, PreloadMs);
 }
 
 void AArenaGameMode::PlayerPickHero(int32 Index)
@@ -403,7 +404,7 @@ AArenaCharacter* AArenaGameMode::SpawnHero(int32 HeroIndex, int32 Team, int32 Sl
 	if (bConquest) { HeroLanes.FindOrAdd(Team * 100 + HeroIndex, LaneForSlot(SlotInTeam)); }
 	Heroes.Add(C);
 	if (!C->bAssistedAim && Xp <= 0.f) { C->AutoRank(); }   // bots spend their first point (a respawn restores its ranks); the player picks it
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=spawn hero=%s team=%d level=%d player=%d skin=%d"), GetWorld()->GetTimeSeconds(), *C->GetDef().Id.ToString(), Team, Level, bPlayer ? 1 : 0, C->NetSetupSkin());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=spawn hero=%s team=%d level=%d player=%d skin=%d"), GetWorld()->GetTimeSeconds(), *C->GetDef().Id.ToString(), Team, Level, bPlayer ? 1 : 0, C->NetSetupSkin());
 	return C;
 }
 
@@ -476,7 +477,7 @@ void AArenaGameMode::SpawnWave()
 			}
 		}
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=wave lane=%d"), GetWorld()->GetTimeSeconds(), Lanes.Num() > 0 ? WaveIndex % Lanes.Num() : -1);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=wave lane=%d"), GetWorld()->GetTimeSeconds(), Lanes.Num() > 0 ? WaveIndex % Lanes.Num() : -1);
 	++WaveIndex;
 }
 
@@ -495,10 +496,10 @@ void AArenaGameMode::NavCheck()
 		UNavigationPath* Path = bOn ? Nav->FindPathToLocationSynchronously(GetWorld(), BaseA, P.Value) : nullptr;
 		const bool bOk = Path && Path->IsValid() && !Path->IsPartial();
 		Bad += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=navpath from=BaseA to=%s at=%s projected=%d path=%s len=%.0f"), *P.Key, *P.Value.ToCompactString(), bOn ? 1 : 0,
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=navpath from=BaseA to=%s at=%s projected=%d path=%s len=%.0f"), *P.Key, *P.Value.ToCompactString(), bOn ? 1 : 0,
 			!Path || !Path->IsValid() ? TEXT("none") : (Path->IsPartial() ? TEXT("PARTIAL") : TEXT("ok")), Path ? Path->GetPathLength() : 0.f);
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=navcheck points=%d unreachable=%d"), Points.Num(), Bad);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=navcheck points=%d unreachable=%d"), Points.Num(), Bad);
 }
 
 FVector AArenaGameMode::FreeSpot(const FVector& Desired, float Radius) const
@@ -602,7 +603,7 @@ void AArenaGameMode::OnCharacterDied(AArenaCharacter* Victim, AArenaCharacter* K
 				++Killer->Streak;
 				if (Killer->Streak >= 3) { Announce(this, FString::Printf(TEXT("%s: streak %d  ·  bounty %d g"), *Killer->GetDef().DisplayName, Killer->Streak, ArenaCore::ShutdownGold(Killer->Streak, Rules.ShutdownPerKill, Rules.ShutdownMax)), false, FLinearColor(1.f, 0.6f, 0.2f)); }
 			}
-			UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=kill killer=%s victim=%s victim_streak=%d bounty=%d"), Now, *Killer->GetDef().Id.ToString(), *Victim->GetDef().Id.ToString(), Victim->Streak, Bounty);
+			ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=kill killer=%s victim=%s victim_streak=%d bounty=%d"), Now, *Killer->GetDef().Id.ToString(), *Victim->GetDef().Id.ToString(), Victim->Streak, Bounty);
 			Killer->KillStreakWindow = (Now - Killer->LastKillTime < 8.f) ? Killer->KillStreakWindow + 1 : 1;
 			Killer->LastKillTime = Now;
 			if (++FirstBlood == 1) { Announce(this, TEXT("FIRST BLOOD!"), true, FLinearColor(1.f, 0.1f, 0.1f)); }
@@ -644,7 +645,7 @@ void AArenaGameMode::OnCharacterDied(AArenaCharacter* Victim, AArenaCharacter* K
 		Pending.Recap = Victim->RecentDamage.FilterByPredicate([Now](const FArenaDamageEvent& E) { return Now - E.Time <= 10.f; });
 		FMemory::Memcpy(Pending.Ranks, Victim->GetRanks(), sizeof(Pending.Ranks));
 		GetWorldTimerManager().SetTimer(Pending.Timer, FTimerDelegate::CreateWeakLambda(this, [this, VTeam, HeroIndex]() { RespawnNow(VTeam, HeroIndex); }), Delay, false);
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=death hero=%s team=%d killer=%s score=%d/%d respawn=%.0f"), Now, *Victim->GetDef().Id.ToString(), VTeam,
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=death hero=%s team=%d killer=%s score=%d/%d respawn=%.0f"), Now, *Victim->GetDef().Id.ToString(), VTeam,
 			Killer ? *Killer->GetDef().Id.ToString() : TEXT("none"), Score.Points[0], Score.Points[1], Delay);
 		Heroes.Remove(Victim);
 	}
@@ -669,7 +670,7 @@ void AArenaGameMode::GiveReward(int32 Team, int32 HeroIndex, AArenaCharacter* Li
 	R->Level = FMath::Max(R->Level, ArenaCore::LevelForXp(R->Xp, Rules.XpBase, Rules.XpGrowth, FMath::Max(2, Rules.MaxLevel)));
 	R->Kills += AddKills;
 	R->Assists += AddAssists;
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=reward_dead team=%d hero=%d gold=%.0f xp=%.0f kills=%d assists=%d"), Team, HeroIndex, GoldAmount, XpAmount, AddKills, AddAssists);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=reward_dead team=%d hero=%d gold=%.0f xp=%.0f kills=%d assists=%d"), Team, HeroIndex, GoldAmount, XpAmount, AddKills, AddAssists);
 }
 
 void AArenaGameMode::SyncGameState()
@@ -762,7 +763,7 @@ void AArenaGameMode::RespawnNow(int32 Team, int32 HeroIndex)
 		N->SetItems(R.Items);
 		N->RefillVitals();
 		N->PlaySpawnIn();
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=respawn hero=%s team=%d gold=%.0f items=%d"), GetWorld()->GetTimeSeconds(), *N->GetDef().Id.ToString(), Team, N->Gold, N->Items.Num());
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=respawn hero=%s team=%d gold=%.0f items=%d"), GetWorld()->GetTimeSeconds(), *N->GetDef().Id.ToString(), Team, N->Gold, N->Items.Num());
 	}
 }
 
@@ -790,7 +791,7 @@ bool AArenaGameMode::TryRevive(int32 Team, int32 HeroIndex)
 	ReviveReadyAt.Add(Team * 100 + HeroIndex, Now + Rules.ReviveCooldown);
 	const FArenaHeroDef& D = FArenaDatabase::Get().Heroes[HeroIndex];
 	AnnounceFor(Team, FString::Printf(TEXT("%s returns to the fight!"), *D.DisplayName), FLinearColor(0.4f, 0.7f, 1.f), FString::Printf(TEXT("%s returns to the fight!"), *D.DisplayName), FLinearColor(1.f, 0.45f, 0.35f), false);
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=revive hero=%s team=%d cost=%d"), Now, *D.Id.ToString(), Team, Cost);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=revive hero=%s team=%d cost=%d"), Now, *D.Id.ToString(), Team, Cost);
 	RespawnNow(Team, HeroIndex);
 	if (AArenaCharacter* Back = FindHero(Team, HeroIndex)) { Back->Voice(TEXT("Revive"), 0.f); }
 	return true;
@@ -828,7 +829,7 @@ ArenaCore::EBuyResult AArenaGameMode::TryBuy(int32 Team, int32 HeroIndex, int32 
 	for (int32 K : Consumed) { Items.RemoveAt(K); }
 	Items.Add(ItemIndex);
 	if (C) { C->SetItems(Items); } else { R->Items = Items; }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=buy hero=%s team=%d item=%s price=%d used=%d gold=%.0f"), GetWorld()->GetTimeSeconds(), *FArenaDatabase::Get().Heroes[HeroIndex].Id.ToString(), Team, *Item.Id.ToString(), Price, Consumed.Num(), Gold);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=buy hero=%s team=%d item=%s price=%d used=%d gold=%.0f"), GetWorld()->GetTimeSeconds(), *FArenaDatabase::Get().Heroes[HeroIndex].Id.ToString(), Team, *Item.Id.ToString(), Price, Consumed.Num(), Gold);
 	return Result;
 }
 
@@ -844,7 +845,7 @@ ArenaCore::EBuyResult AArenaGameMode::TryBuyPotion(int32 Team, int32 HeroIndex, 
 	if (Gold < Rules.PotionCost) { return ArenaCore::EBuyResult::NotEnoughGold; }
 	Gold -= Rules.PotionCost;
 	++Count;
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=buy_potion hero=%s team=%d kind=%d count=%d gold=%.0f"), GetWorld()->GetTimeSeconds(), *FArenaDatabase::Get().Heroes[HeroIndex].Id.ToString(), Team, Kind, Count, Gold);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=buy_potion hero=%s team=%d kind=%d count=%d gold=%.0f"), GetWorld()->GetTimeSeconds(), *FArenaDatabase::Get().Heroes[HeroIndex].Id.ToString(), Team, Kind, Count, Gold);
 	return ArenaCore::EBuyResult::Ok;
 }
 
@@ -880,7 +881,7 @@ bool AArenaGameMode::TrySell(int32 Team, int32 HeroIndex, int32 InventoryPos)
 	const int32 Value = ArenaCore::SellValue(Item, FArenaDatabase::Recipes());
 	Items.RemoveAt(InventoryPos);
 	if (C) { C->Gold += Value; C->SetItems(Items); } else { R->Gold += Value; R->Items = Items; }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=sell hero=%s team=%d item=%s value=%d"), GetWorld()->GetTimeSeconds(), *FArenaDatabase::Get().Heroes[HeroIndex].Id.ToString(), Team, *FArenaDatabase::Get().Items[Item].Id.ToString(), Value);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=sell hero=%s team=%d item=%s value=%d"), GetWorld()->GetTimeSeconds(), *FArenaDatabase::Get().Heroes[HeroIndex].Id.ToString(), Team, *FArenaDatabase::Get().Items[Item].Id.ToString(), Value);
 	return true;
 }
 
@@ -983,7 +984,7 @@ void AArenaGameMode::CheckWinConditions(float Now)
 		bOvertime = true;
 		OvertimeStart = Now;
 		Announce(this, TEXT("OVERTIME! Next point wins"), true, FLinearColor(1.f, 0.85f, 0.2f));
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=overtime score=%d/%d"), Now, Score.Points[0], Score.Points[1]);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=overtime score=%d/%d"), Now, Score.Points[0], Score.Points[1]);
 	}
 	else if (bBotMatch && Now - OvertimeStart > 30.f) { EndMatch(ArenaCore::NoTeam); }   // unattended runs end in a draw
 }
@@ -992,7 +993,7 @@ void AArenaGameMode::MinionReachedPortal(AArenaCharacter* Minion, int32 PortalTe
 {
 	if (!Minion || Phase != EArenaPhase::Playing) { return; }
 	Score.Award(ArenaCore::EScoreEvent::MinionReachedBase, 1 - PortalTeam);
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=portal team=%d score=%d/%d"), GetWorld()->GetTimeSeconds(), PortalTeam, Score.Points[0], Score.Points[1]);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=portal team=%d score=%d/%d"), GetWorld()->GetTimeSeconds(), PortalTeam, Score.Points[0], Score.Points[1]);
 	Minion->Destroy();
 	CheckWinConditions(GetWorld()->GetTimeSeconds());
 }
@@ -1001,7 +1002,7 @@ void AArenaGameMode::OnOrbTaken(AArenaCharacter* Taker)
 {
 	Orb = nullptr;
 	NextOrb = GetWorld()->GetTimeSeconds() + 60.f;
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=orb_taken hero=%s team=%d"), GetWorld()->GetTimeSeconds(), Taker ? *Taker->GetDef().Id.ToString() : TEXT("none"), Taker ? Taker->GetTeam() : -1);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=orb_taken hero=%s team=%d"), GetWorld()->GetTimeSeconds(), Taker ? *Taker->GetDef().Id.ToString() : TEXT("none"), Taker ? Taker->GetTeam() : -1);
 }
 
 bool AArenaGameMode::OrbLocation(FVector& Out) const
@@ -1033,7 +1034,7 @@ void AArenaGameMode::EndMatch(int32 Winner)
 		It->GetCharacterMovement()->StopMovementImmediately();
 		if (!It->IsMinion() && It->GetTeam() == Winner) { It->PlayVictory(); }
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=victory winner=%d score=%d/%d"), GetWorld()->GetTimeSeconds(), Winner, Score.Points[0], Score.Points[1]);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=victory winner=%d score=%d/%d"), GetWorld()->GetTimeSeconds(), Winner, Score.Points[0], Score.Points[1]);
 	if (!bBotMatch && FArenaSettings::Get().bTutorial) { FArenaSettings::Get().bTutorial = false; FArenaSettings::Get().Save(); }
 	WriteSummaryAndMaybeQuit();
 }
@@ -1054,7 +1055,7 @@ void AArenaGameMode::WriteSummaryAndMaybeQuit()
 		++HeroCount;
 		for (int32 s = 0; s < 5; ++s) { Casts += H->SlotCasts[s]; }
 		All4 += (H->SlotCasts[1] > 0 && H->SlotCasts[2] > 0 && H->SlotCasts[3] > 0 && H->SlotCasts[4] > 0) ? 1 : 0;
-		UE_LOG(LogArena, Display, TEXT("ARENA_HERO id=%s team=%d level=%d k=%d d=%d a=%d casts=%d,%d,%d,%d,%d"), *H->GetDef().Id.ToString(), H->GetTeam(), H->GetHeroLevel(),
+		ARENA_LOG(LogArena, Display, TEXT("ARENA_HERO id=%s team=%d level=%d k=%d d=%d a=%d casts=%d,%d,%d,%d,%d"), *H->GetDef().Id.ToString(), H->GetTeam(), H->GetHeroLevel(),
 			H->Kills, H->Deaths, H->Assists, H->SlotCasts[0], H->SlotCasts[1], H->SlotCasts[2], H->SlotCasts[3], H->SlotCasts[4]);
 	}
 	Stuck = StuckTotal;
@@ -1065,13 +1066,13 @@ void AArenaGameMode::WriteSummaryAndMaybeQuit()
 	{
 		int32 Towers[2] = { 0, 0 }, Inhibs[2] = { 0, 0 };
 		for (const FStructure& St : Structures) { if (!St.bAlive) { (St.Kind == 1 ? Towers : Inhibs)[St.Team] += St.Kind <= 2 ? 1 : 0; } }
-		UE_LOG(LogArena, Display, TEXT("CONQUEST_SUMMARY winner=%d towers_lost=%d/%d inhibs_lost=%d/%d left=%d/%d boss_team=%d camps=%d struct_dmg_A=%.0f+%.0f struct_dmg_B=%.0f+%.0f"), WinnerTeam, Towers[0], Towers[1], Inhibs[0], Inhibs[1], StructuresLeft(0), StructuresLeft(1), BossTeam, Camps.Num(),
+		ARENA_LOG(LogArena, Display, TEXT("CONQUEST_SUMMARY winner=%d towers_lost=%d/%d inhibs_lost=%d/%d left=%d/%d boss_team=%d camps=%d struct_dmg_A=%.0f+%.0f struct_dmg_B=%.0f+%.0f"), WinnerTeam, Towers[0], Towers[1], Inhibs[0], Inhibs[1], StructuresLeft(0), StructuresLeft(1), BossTeam, Camps.Num(),
 			StructureDamage[0][0], StructureDamage[0][1], StructureDamage[1][0], StructureDamage[1][1]);
 	}
-	UE_LOG(LogArena, Display, TEXT("DEATH_AUDIT tower_dive=%d outnumbered=%d low_engage=%d fair=%d | bots: tower_dive=%d outnumbered=%d low_engage=%d fair=%d"),
+	ARENA_LOG(LogArena, Display, TEXT("DEATH_AUDIT tower_dive=%d outnumbered=%d low_engage=%d fair=%d | bots: tower_dive=%d outnumbered=%d low_engage=%d fair=%d"),
 		DeathAudit[0], DeathAudit[1], DeathAudit[2], DeathAudit[3], DeathAuditBots[0], DeathAuditBots[1], DeathAuditBots[2], DeathAuditBots[3]);
-	UE_LOG(LogArena, Display, TEXT("ARENA_BOTS jumps=%d"), AArenaBotController::Jumps);
-	UE_LOG(LogArena, Display, TEXT("ARENA_SUMMARY seed=%d duration=%.0f score=%d/%d limit=%d winner=%d heroes=%d casts=%d all4=%d stuck=%d items=%d yaw_snaps=%d/%d"),
+	ARENA_LOG(LogArena, Display, TEXT("ARENA_BOTS jumps=%d"), AArenaBotController::Jumps);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA_SUMMARY seed=%d duration=%.0f score=%d/%d limit=%d winner=%d heroes=%d casts=%d all4=%d stuck=%d items=%d yaw_snaps=%d/%d"),
 		Seed, Dur, Score.Points[0], Score.Points[1], Score.Rules.Limit, WinnerTeam, HeroCount, Casts, All4, Stuck, ItemsBought, AArenaCharacter::YawSnaps, AArenaCharacter::YawFrames);
 	// per hero, for the balance analysis (melee against ranged, v17)
 	if (const AArenaGameState* SumGS = GetGameState<AArenaGameState>())
@@ -1081,7 +1082,7 @@ void AArenaGameMode::WriteSummaryAndMaybeQuit()
 		{
 			if (!Defs.IsValidIndex(St.Hero)) { continue; }
 			const bool bMeleeKit = Defs[St.Hero].Abilities.IsValidIndex(0) && Defs[St.Hero].Abilities[0].Range < 5.f;
-			UE_LOG(LogArena, Display, TEXT("ARENA_HERO team=%d hero=%s melee=%d level=%d k=%d d=%d a=%d dmg=%.0f taken=%.0f gold=%.0f minions=%d"), St.Team, *Defs[St.Hero].Id.ToString(), bMeleeKit ? 1 : 0,
+			ARENA_LOG(LogArena, Display, TEXT("ARENA_HERO team=%d hero=%s melee=%d level=%d k=%d d=%d a=%d dmg=%.0f taken=%.0f gold=%.0f minions=%d"), St.Team, *Defs[St.Hero].Id.ToString(), bMeleeKit ? 1 : 0,
 				St.Level, St.Kills, St.Deaths, St.Assists, St.DamageToHeroes, St.DamageTaken, St.Gold, St.MinionKills);
 		}
 	}
@@ -1092,7 +1093,7 @@ void AArenaGameMode::WriteSummaryAndMaybeQuit()
 		double Sum = 0.0; for (float Ms : Sorted) { Sum += Ms; }
 		const float Avg = Sum / Sorted.Num(), P99 = Sorted[FMath::Min(Sorted.Num() - 1, FMath::FloorToInt(Sorted.Num() * 0.99f))];
 		const float P95 = Sorted[FMath::Min(Sorted.Num() - 1, FMath::FloorToInt(Sorted.Num() * 0.95f))];
-		UE_LOG(LogArena, Display, TEXT("ARENA_PERF frames=%d avg_fps=%.1f p1_low_fps=%.1f p95_ms=%.2f p99_ms=%.2f worst_ms=%.1f res=%dx%d"), Sorted.Num(), 1000.f / FMath::Max(0.01f, Avg), 1000.f / FMath::Max(0.01f, P99), P95, P99, Sorted.Last(),
+		ARENA_LOG(LogArena, Display, TEXT("ARENA_PERF frames=%d avg_fps=%.1f p1_low_fps=%.1f p95_ms=%.2f p99_ms=%.2f worst_ms=%.1f res=%dx%d"), Sorted.Num(), 1000.f / FMath::Max(0.01f, Avg), 1000.f / FMath::Max(0.01f, P99), P95, P99, Sorted.Last(),
 			GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport ? GEngine->GameViewport->Viewport->GetSizeXY().X : 0, GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport ? GEngine->GameViewport->Viewport->GetSizeXY().Y : 0);
 		// the Shipping exe writes no log: the numbers also go to Saved/ArenaPerf.txt for its checks
 		const FString Line = FString::Printf(TEXT("seed=%d duration=%.0f frames=%d avg_fps=%.1f p1_low_fps=%.1f p95_ms=%.2f worst_ms=%.1f hitches=%d winner=%d score=%d/%d all4=%d preload_ms=%.0f\n"),
@@ -1102,9 +1103,9 @@ void AArenaGameMode::WriteSummaryAndMaybeQuit()
 	// the ultimate opens at level 5 (~1-2 min in): a short match needs 8 of 10 heroes with all four, a long one all of them
 	const float Played = GetWorld()->GetTimeSeconds() - MatchStart;
 	const int32 Need = Played >= 540.f ? HeroCount : FMath::CeilToInt(HeroCount * 0.8f);
-	UE_LOG(LogArena, Display, TEXT("%s VR-09 heroes that cast all 4 abilities: %d/%d (need %d)"), All4 >= Need && HeroCount > 0 ? TEXT("PASS") : TEXT("FAIL"), All4, HeroCount, Need);
-	UE_LOG(LogArena, Display, TEXT("%s VR-08 stuck episodes > 3 s: %d"), Stuck == 0 ? TEXT("PASS") : TEXT("FAIL"), Stuck);
-	UE_LOG(LogArena, Display, TEXT("%s GS-08 distinct heroes in the match: %d/10"), HeroCount == 10 ? TEXT("PASS") : TEXT("FAIL"), HeroCount);
+	ARENA_LOG(LogArena, Display, TEXT("%s VR-09 heroes that cast all 4 abilities: %d/%d (need %d)"), All4 >= Need && HeroCount > 0 ? TEXT("PASS") : TEXT("FAIL"), All4, HeroCount, Need);
+	ARENA_LOG(LogArena, Display, TEXT("%s VR-08 stuck episodes > 3 s: %d"), Stuck == 0 ? TEXT("PASS") : TEXT("FAIL"), Stuck);
+	ARENA_LOG(LogArena, Display, TEXT("%s GS-08 distinct heroes in the match: %d/10"), HeroCount == 10 ? TEXT("PASS") : TEXT("FAIL"), HeroCount);
 	if (bBotMatch)
 	{
 		FTimerHandle H;
@@ -1116,7 +1117,7 @@ void AArenaGameMode::UIShot(const TCHAR* Name)
 {
 	FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("%s.png"), Name), true, false);
 	PerfSkipUntil = GetWorld()->GetTimeSeconds() + 0.7f;
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=ui_shot name=%s"), Name);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=ui_shot name=%s"), Name);
 }
 
 void AArenaGameMode::TickUIDemo(float Now)
@@ -1197,7 +1198,7 @@ void AArenaGameMode::AddPing(int32 Team, int32 HeroIndex, const FVector& At)
 	GS->Pings.RemoveAll([Now](const FArenaPingRep& P) { return Now - P.Time > 10.f; });
 	FArenaPingRep& P = GS->Pings.AddDefaulted_GetRef();
 	P.Team = (uint8)Team; P.Hero = HeroIndex; P.Pos = At; P.Time = Now;
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=ping team=%d hero=%d at=%s"), Now, Team, HeroIndex, *At.ToCompactString());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=ping team=%d hero=%d at=%s"), Now, Team, HeroIndex, *At.ToCompactString());
 }
 
 bool AArenaGameMode::PingFor(int32 Team, FVector& Out) const
@@ -1271,7 +1272,7 @@ void AArenaGameMode::PostLogin(APlayerController* NewPlayer)
 	if (OnTeam[H.Team] >= TeamSize && OnTeam[1 - H.Team] < TeamSize) { H.Team = 1 - H.Team; }
 	if (AArenaPlayerController* APC = Cast<AArenaPlayerController>(NewPlayer)) { APC->NetTeam = H.Team; }
 	AnnounceFor(H.Team, TEXT("A player joined (your team)"), FLinearColor(0.5f, 0.85f, 1.f), TEXT("A player joined (enemy team)"), FLinearColor(0.5f, 0.85f, 1.f), true);
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=net_join team=%d humans=%d phase=%d"), H.Team, RemoteHumans.Num() + 1, (int32)Phase);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=net_join team=%d humans=%d phase=%d"), H.Team, RemoteHumans.Num() + 1, (int32)Phase);
 	if (Phase == EArenaPhase::Countdown || Phase == EArenaPhase::Playing) { TakeOverBot(NewPlayer, H.Team); }
 }
 
@@ -1309,7 +1310,7 @@ void AArenaGameMode::RemotePickHero(APlayerController* PC, int32 Hero, int32 Ski
 		if (H.PC.Get() != PC) { continue; }
 		H.Hero = FArenaDatabase::Get().Heroes.IsValidIndex(Hero) ? Hero : -1;
 		H.Skin = Skin;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=net_pick team=%d hero=%d"), H.Team, H.Hero);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=net_pick team=%d hero=%d"), H.Team, H.Hero);
 		Announce(this, FString::Printf(TEXT("Player picked: %s"), FArenaDatabase::Get().Heroes.IsValidIndex(Hero) ? *FArenaDatabase::Get().Heroes[Hero].DisplayName : TEXT("?")), false, FLinearColor(0.5f, 0.85f, 1.f));
 	}
 }
@@ -1333,7 +1334,7 @@ void AArenaGameMode::TakeOverBot(APlayerController* PC, int32 Team)
 		C->PlayerIndex = 1;
 		PC->Possess(C);
 		for (FHuman& H : RemoteHumans) { if (H.PC.Get() == PC) { H.Hero = C->HeroIndex; } }
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=net_takeover team=%d hero=%s"), Team, *C->GetDef().Id.ToString());
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=net_takeover team=%d hero=%s"), Team, *C->GetDef().Id.ToString());
 		return;
 	}
 	// every bot of the team is dead: the guest takes the first one waiting to respawn and comes back with it
@@ -1343,10 +1344,10 @@ void AArenaGameMode::TakeOverBot(APlayerController* PC, int32 Team)
 		R.bPlayer = true;
 		R.Owner = PC;
 		for (FHuman& H : RemoteHumans) { if (H.PC.Get() == PC) { H.Hero = R.Hero; } }
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=net_takeover_respawn team=%d hero=%d"), Team, R.Hero);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=net_takeover_respawn team=%d hero=%d"), Team, R.Hero);
 		return;
 	}
-	UE_LOG(LogArena, Warning, TEXT("ARENA evt=net_takeover_none team=%d"), Team);
+	ARENA_LOG(LogArena, Warning, TEXT("ARENA evt=net_takeover_none team=%d"), Team);
 }
 
 bool AArenaGameMode::NavReady() const
@@ -1372,7 +1373,7 @@ void AArenaGameMode::Tick(float DeltaSeconds)
 	if (bNetTestHost && GetNetMode() == NM_ListenServer) { TickNetTestHost(GetWorld()->GetTimeSeconds()); }
 	if (bConquestPending && (NavReady() || GetWorld()->GetTimeSeconds() > 20.f))
 	{
-		if (!NavReady()) { UE_LOG(LogArena, Warning, TEXT("ARENA evt=conquest_nav_timeout")); }
+		if (!NavReady()) { ARENA_LOG(LogArena, Warning, TEXT("ARENA evt=conquest_nav_timeout")); }
 		bConquestPending = false;
 		StartConquest();
 	}
@@ -1401,7 +1402,7 @@ void AArenaGameMode::Tick(float DeltaSeconds)
 		{
 			if (Now < Cmds[i].Key) { continue; }
 			if (APlayerController* CmdPC = GetWorld()->GetFirstPlayerController()) { CmdPC->ConsoleCommand(Cmds[i].Value); }
-			UE_LOG(LogArena, Display, TEXT("ARENA evt=cmd t=%.1f cmd=%s"), Now, *Cmds[i].Value);
+			ARENA_LOG(LogArena, Display, TEXT("ARENA evt=cmd t=%.1f cmd=%s"), Now, *Cmds[i].Value);
 			Cmds.RemoveAt(i);
 		}
 	}
@@ -1417,10 +1418,10 @@ void AArenaGameMode::Tick(float DeltaSeconds)
 		NextShot = 6.f;
 		NextOrb = Now + 45.f;
 		Announce(this, TEXT("FIGHT!"), true, FLinearColor(1.f, 0.4f, 0.1f));
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=match_start length=%.0f limit=%d"), Now, MatchLength, Score.Rules.Limit);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=match_start length=%.0f limit=%d"), Now, MatchLength, Score.Rules.Limit);
 		const UNavigationSystemV1* Nav = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 		const ARecastNavMesh* Recast = Nav ? Cast<ARecastNavMesh>(Nav->GetDefaultNavDataInstance()) : nullptr;
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=nav navdata=%s agent_radius=%.0f"), Now, Nav && Nav->GetDefaultNavDataInstance() ? TEXT("present") : TEXT("MISSING"), Recast ? Recast->AgentRadius : -1.f);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=nav navdata=%s agent_radius=%.0f"), Now, Nav && Nav->GetDefaultNavDataInstance() ? TEXT("present") : TEXT("MISSING"), Recast ? Recast->AgentRadius : -1.f);
 		if (FParse::Param(FCommandLine::Get(), TEXT("ArenaNavCheck"))) { NavCheck(); }
 	}
 	if (Phase != EArenaPhase::Playing) { return; }
@@ -1434,7 +1435,7 @@ void AArenaGameMode::Tick(float DeltaSeconds)
 	if (bPerfFrame && FApp::GetDeltaTime() > 0.1 && Now - MatchStart > 1.f && Hitches < 40)
 	{
 		++Hitches;
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=hitch ms=%.0f"), Now, FApp::GetDeltaTime() * 1000.0);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=hitch ms=%.0f"), Now, FApp::GetDeltaTime() * 1000.0);
 	}
 	if (!bConquest && !Orb.IsValid() && NextOrb > 0.f && Now >= NextOrb)
 	{
@@ -1442,7 +1443,7 @@ void AArenaGameMode::Tick(float DeltaSeconds)
 		Orb = GetWorld()->SpawnActor<AArenaPowerOrb>(AArenaPowerOrb::StaticClass(), OrbSpot, FRotator::ZeroRotator, P);
 		NextOrb = -1.f;
 		Announce(this, TEXT("THE POWER OF TARTARUS has appeared on the altar!"), true, FLinearColor(1.f, 0.45f, 0.1f));
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=orb_spawn"), Now);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=orb_spawn"), Now);
 	}
 	if (TourShotAt > 0.f && Now >= TourShotAt)
 	{
@@ -1461,7 +1462,7 @@ void AArenaGameMode::Tick(float DeltaSeconds)
 		else { FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("ArenaShot_%02d.png"), ShotIndex++), false, false); }
 		PerfSkipUntil = Now + 0.7f;
 		NextShot += 15.f;
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=screenshot n=%d"), Now, ShotIndex);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=screenshot n=%d"), Now, ShotIndex);
 	}
 
 	for (TActorIterator<AArenaCharacter> It(GetWorld()); It; ++It)
@@ -1519,7 +1520,7 @@ void AArenaGameMode::AuditHeroDeath(AArenaCharacter* Victim, AArenaCharacter* Ki
 	static const TCHAR* Names[] = { TEXT("tower_dive"), TEXT("outnumbered"), TEXT("low_engage"), TEXT("fair") };
 	++DeathAudit[Cat];
 	if (bBot) { ++DeathAuditBots[Cat]; }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=death_audit victim=%s team=%d bot=%d killer=%s killer_kind=%s in_tower=%d shot_by_tower=%d enemies=%d allies=%d hp6s=%.2f retreat=%d level=%d cat=%s at=%s"),
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=death_audit victim=%s team=%d bot=%d killer=%s killer_kind=%s in_tower=%d shot_by_tower=%d enemies=%d allies=%d hp6s=%.2f retreat=%d level=%d cat=%s at=%s"),
 		Now, *Victim->GetDef().Id.ToString(), VTeam, bBot ? 1 : 0, Killer ? *Killer->GetDef().Id.ToString() : TEXT("-"), KillerKind, bInTower ? 1 : 0, bShotByTower ? 1 : 0,
 		Enemies, Allies, Hp6, bRetreating ? 1 : 0, Victim->GetHeroLevel(), Names[Cat], *At.ToCompactString());
 }

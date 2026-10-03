@@ -1,7 +1,7 @@
 // -ArenaSkillLab: the MOBA rules of v6 measured on live units (VR-20 ranks and levels, VR-21 fixed displacements and
 // telegraphs, VR-12 item passives and recipes). Every number is compared with what heroes.json and ArenaCore say.
 //   ranks      Greystone's Cleave at rank 1 and rank 5: damage, slow, knockback distance, mana, cooldown
-//   ultimate   Unicestwienie: the telegraph fills from the cast and is half full at half the delay; knock-up height,
+//   ultimate   Annihilation: the telegraph fills from the cast and is half full at half the delay; knock-up height,
 //              air time and stun length
 //   levels     XP curve, stats per level, skill points, the ultimate opening at level 5 (a bot spends by its order)
 //   items      deterministic crits (every 4th with 25 %) at 225 %, execute, thorns, last stand, spell blade
@@ -10,6 +10,7 @@
 //              owned part and costs the rest
 // Prints LAB PASS/FAIL and LAB_SUMMARY like the other labs; screenshots SKILL_*.png.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Game/ArenaPlayerController.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Arena/ArenaIndicator.h"
@@ -96,7 +97,7 @@ void AArenaGameMode::StartSkillLab()
 	}
 	Phase = EArenaPhase::Playing;
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=skilllab_start"));
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=skilllab_start"));
 }
 
 void AArenaGameMode::TickSkillLab(float Now)
@@ -105,7 +106,7 @@ void AArenaGameMode::TickSkillLab(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	AArenaCharacter* G = GSkillLab.G.Get();
 	AArenaCharacter* D = GSkillLab.D.Get();
@@ -165,7 +166,7 @@ void AArenaGameMode::TickSkillLab(float Now)
 			Place(D, LabA + FVector(0.f, 400.f, 0.f), 270.f);
 			GSkillLab.HP0 = GSkillLab.MinHP = D->GetHealth(); GSkillLab.Z0 = D->GetActorLocation().Z; GSkillLab.MaxZ = 0.f; GSkillLab.AirStart = GSkillLab.AirEnd = GSkillLab.Fill50 = GSkillLab.FirstStun = -1.f; GSkillLab.Power0 = G->GetPower();
 			G->AimPoint = D->GetActorLocation() - FVector(0.f, 0.f, 90.f);
-			Check(G->TryCast(4), TEXT("cast Unicestwienie"));
+			Check(G->TryCast(4), TEXT("cast Annihilation"));
 			GSkillLab.StepT = T;
 			++LabStep;
 		}
@@ -189,7 +190,9 @@ void AArenaGameMode::TickSkillLab(float Now)
 			const float Air = GSkillLab.AirEnd > 0.f ? GSkillLab.AirEnd - GSkillLab.AirStart : -1.f;
 			const float AirPlan = ArenaCore::KnockAirSeconds(Ult.KnockUp) + 0.12f;   // + the ultimate's hit-stop
 			Check(Near(Air, AirPlan, 0.12f), FString::Printf(TEXT("air time: %.2f s, %.2f planned (%.2f flight + 0.12 hit-stop)"), Air, AirPlan, ArenaCore::KnockAirSeconds(Ult.KnockUp)));
-			Check(Near(GSkillLab.FirstStun, Ult.StunSeconds, 0.06f), FString::Printf(TEXT("stun: %.2f s (data %.2f)"), GSkillLab.FirstStun, Ult.StunSeconds));
+			// v21: a melee hero shrugs off a share of every stun (rules.meleeTenacity), so the plan is the data's length less that share
+			const float StunPlan = Ult.StunSeconds * (D->IsMeleeHero() ? 1.f - FMath::Clamp(FArenaDatabase::Get().Rules.MeleeTenacity, 0.f, 0.8f) : 1.f);
+			Check(Near(GSkillLab.FirstStun, StunPlan, 0.06f), FString::Printf(TEXT("stun: %.2f s, %.2f planned (data %.2f, melee tenacity %s)"), GSkillLab.FirstStun, StunPlan, Ult.StunSeconds, D->IsMeleeHero() ? TEXT("on") : TEXT("off")));
 			const float Want = Expected(G, D, Ult.Damage + Ult.PowerScale * GSkillLab.Power0);
 			Check(Near(GSkillLab.HP0 - GSkillLab.MinHP, Want, Want * 0.02f + 3.f), FString::Printf(TEXT("ultimate damage: %.0f dealt, %.0f by the data"), GSkillLab.HP0 - GSkillLab.MinHP, Want));
 			GSkillLab.StepT = T;
@@ -541,7 +544,7 @@ void AArenaGameMode::TickSkillLab(float Now)
 	case 90:
 		if (T > GSkillLab.StepT + 0.5f)
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			++LabStep;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}

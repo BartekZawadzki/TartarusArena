@@ -1,4 +1,5 @@
 #include "Game/ArenaPlayerController.h"
+#include "Game/ArenaEvidence.h"
 #include "Game/ArenaGameMode.h"
 #include "InputKeyEventArgs.h"
 #include "Heroes/ArenaCharacter.h"
@@ -740,7 +741,7 @@ void AArenaPlayerController::ServerPing_Implementation(FVector_NetQuantize At)
 
 void AArenaPlayerController::TickNetGuest(float Now)
 {
-	auto Check = [this](bool bOk, const FString& What) { NetGuestFails += bOk ? 0 : 1; UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What); };
+	auto Check = [this](bool bOk, const FString& What) { NetGuestFails += bOk ? 0 : 1; ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What); };
 	const AArenaGameState* GS = AArenaGameState::Get(this);
 	if (!GS) { return; }
 	if (GS->Phase == EArenaPhase::HeroSelect && PickedHero < 0 && Now > 3.f) { MenuAction(TEXT("PickHero"), 3); }
@@ -779,7 +780,7 @@ void AArenaPlayerController::TickNetGuest(float Now)
 	}
 	if (H && FMath::FloorToInt(Now / 5.f) != FMath::FloorToInt((Now - GetWorld()->GetDeltaSeconds()) / 5.f))
 	{
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=netguest_pos t=%.0f at=%s target=%s dist=%.0f speed=%.0f max=%.0f"), Now - NetGuestStart, *H->GetActorLocation().ToCompactString(),
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=netguest_pos t=%.0f at=%s target=%s dist=%.0f speed=%.0f max=%.0f"), Now - NetGuestStart, *H->GetActorLocation().ToCompactString(),
 			NetGuestGoal.IsValid() ? *NetGuestGoal->GetDef().Id.ToString() : TEXT("none"), NetGuestGoal.IsValid() ? FVector::Dist2D(NetGuestGoal->GetActorLocation(), H->GetActorLocation()) : -1.f,
 			H->GetVelocity().Size2D(), H->GetCharacterMovement()->MaxWalkSpeed);
 	}
@@ -809,7 +810,7 @@ void AArenaPlayerController::TickNetGuest(float Now)
 	if (NetGuestStep == 1 && Now - NetGuestStart > 42.f)
 	{
 		NetGuestStep = 2;
-		UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), NetGuestFails);
+		ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), NetGuestFails);
 		GNetGuestDone = true;
 	}
 	if (NetGuestStep == 2 && Now - NetGuestStart > 62.f)
@@ -994,7 +995,7 @@ void AArenaPlayerController::DemoPauseClicks(const TArray<FName>& Buttons)
 	DemoClicks = Buttons;
 	DemoClickStep = 0;
 	DemoClickStart = DemoClickAt = GetWorld()->GetRealTimeSeconds() + 0.5f;
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=ui_pause_clicks buttons=%d paused=%d"), Buttons.Num(), IsPaused() ? 1 : 0);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=ui_pause_clicks buttons=%d paused=%d"), Buttons.Num(), IsPaused() ? 1 : 0);
 }
 
 void AArenaPlayerController::TickDemoClicks(AArenaHUD* HUD)
@@ -1013,14 +1014,14 @@ void AArenaPlayerController::TickDemoClicks(AArenaHUD* HUD)
 		{
 			// the last click (RESUME) must have closed the menu and lifted the pause
 			const bool bOk = Menu == EArenaMenu::None && !IsPaused();
-			UE_LOG(LogArena, Display, TEXT("LAB %s UI-PAUSE: clicks in the paused menu reach their buttons (menu=%d paused=%d)"), bOk ? TEXT("PASS") : TEXT("FAIL"), (int32)Menu, IsPaused() ? 1 : 0);
+			ARENA_LOG(LogArena, Display, TEXT("LAB %s UI-PAUSE: clicks in the paused menu reach their buttons (menu=%d paused=%d)"), bOk ? TEXT("PASS") : TEXT("FAIL"), (int32)Menu, IsPaused() ? 1 : 0);
 			if (!bOk) { MenuAction(TEXT("Resume"), 0); }
 		}
 		return;
 	}
 	if (Now - DemoClickStart > 8.f)
 	{
-		UE_LOG(LogArena, Display, TEXT("LAB FAIL UI-PAUSE: the paused menu stopped answering (menu=%d paused=%d left=%d)"), (int32)Menu, IsPaused() ? 1 : 0, DemoClicks.Num());
+		ARENA_LOG(LogArena, Display, TEXT("LAB FAIL UI-PAUSE: the paused menu stopped answering (menu=%d paused=%d left=%d)"), (int32)Menu, IsPaused() ? 1 : 0, DemoClicks.Num());
 		DemoClicks.Reset();
 		MenuAction(TEXT("Resume"), 0);
 		return;
@@ -1031,7 +1032,7 @@ void AArenaPlayerController::TickDemoClicks(AArenaHUD* HUD)
 	const EArenaMenu Before = Menu;
 	SimMouse = At;
 	InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::LeftMouseButton, IE_Pressed, 1.f));
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=ui_click button=%s at=%.0f,%.0f menu_before=%d"), *Want.ToString(), At.X, At.Y, (int32)Before);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=ui_click button=%s at=%.0f,%.0f menu_before=%d"), *Want.ToString(), At.X, At.Y, (int32)Before);
 	DemoClicks.RemoveAt(0);
 	DemoClickStep = 1;
 	DemoClickAt = Now + 0.15f;
@@ -1070,7 +1071,7 @@ void AArenaPlayerController::PlayerTick(float DeltaTime)
 		const FString Addr = PendingJoin;
 		PendingJoin.Reset();
 		LoadingFrames = -1;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=net_connect address=%s"), *Addr);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=net_connect address=%s"), *Addr);
 		ClientTravel(Addr, TRAVEL_Absolute);
 		return;
 	}

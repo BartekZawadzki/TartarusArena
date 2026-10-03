@@ -20,7 +20,7 @@ the repository. The corrections it led to are part of the record (section 6).
 - **Tested:** the DF method at `OneDro1d/dark-factory@88223d2`, still the method's `main`, plus a local gamedev
   layer. Claude ran it in Claude Code from 2026-09-26 to 2026-10-02.
 - **Result:** a 5v5 MOBA with 11 heroes, two modes, bots, LAN play and two prototypes, shipped in 22 versions. Each
-  version came with evidence: 51 automation tests, ~15 self-checking in-game labs, seeded bot matches and, in most
+  version came with evidence: 50 automation tests, ~15 self-checking in-game labs, seeded bot matches and, in most
   releases, a check of the packaged build.
 - **What carried it:**
   - evidence over summaries;
@@ -54,11 +54,11 @@ the repository. The corrections it led to are part of the record (section 6).
 | Solution architect | `df-solution-architect` | [`02-technical-design.md`](dark-factory/02-technical-design.md): a locus table that gives the core rules (VR-01…VR-10) an enforcement point and a mechanism, plus 14 ADRs. Later rules were enforced in specs and labs without being added to the table | **Strong, but traceability lagged.** The data-transform lens fits game rules. Damage, gold, ranks, the bot brain and Conquest's protection chain are *pure* functions; spawning, physics and replication are the *effects*. The table was not extended as rules were added |
 | Infrastructure | `df-infrastructure` | no DTAP environments, only one Windows workstation; packaging recipes and disk budgets live in the QA reports | **Recast.** The real infrastructure risks were on the machine: a project drive whose filesystem needs a repair, and a system drive that filled up during a cook |
 | Observability | `df-observability` | a "consumable surface" of log lines and files: `ARENA_SUMMARY`, `DEATH_AUDIT`, `ARENA_BOTS`, `Saved/ArenaPerf.txt`, `ProtoLab.txt`, `Teaser.txt` | **Adapted.** A Shipping build writes no log, so any evidence the packaged game must give is written to files |
-| TDD | `df-tdd-developer` | 6 automation specs: 17 tests in v1, 51 today. The test list follows the validation rules | **Strong** for rules. Not enough on its own for feel, animation, rendering or audio |
+| TDD | `df-tdd-developer` | 6 automation specs: 17 tests in v1, 50 today. The test list follows the validation rules | **Strong** for rules. Not enough on its own for feel, animation, rendering or audio |
 | QA | `df-qa`, `df-game-qa` | ~15 in-game **labs** (`-ArenaSkillLab`, `-ArenaFxLab`, `-ProtoLab`…) that script the real game and print `LAB PASS/FAIL` with screenshots. Also: seeded headless bot matches, packaged-exe checks, and 20 QA reports over the 22 versions. Explicit T1/T2/T3 verdicts run up to v11; the later reports list the evidence and the open items without tier labels | **The heart of it.** A lab is the game equivalent of an integration test with an unforgeable trace. The tier labels lapsing is a deviation (conclusion 3) |
 | Adversary | `df-adversary-gate`, `df-game-verifier` | one blind, read-only review of the network and Conquest code, which found 13 defects, all confirmed; decoy checks that must fail | **High value, used too rarely:** one formal blind review in 22 versions |
 | Control loop | `vinculum-loop`, `dark-factory-build` | the "decide what you can, come back only when done or blocked" contract, held interactively. Hard stops were respected: publishing, spending, downloads, deleting the owner's data, opening windows on the owner's desktop | **Partial:** practised in spirit, without the map or mission artifacts |
-| Dispatch | `df-dispatch-subagents` | helper agents for research catalogues, a version timeline, translation passes and the blind review | **Useful, not to the letter.** The dispatch prompts were plain task descriptions, not the PROMISE / EVIDENCE / BOUNDS form the method asks for. One helper's count of 50 tests reached a README draft before a real run showed 51 |
+| Dispatch | `df-dispatch-subagents` | helper agents for research catalogues, a version timeline, translation passes and the blind review | **Useful, not to the letter.** The dispatch prompts were plain task descriptions, not the PROMISE / EVIDENCE / BOUNDS form the method asks for. One helper's count of 50 tests was "corrected" to the 51 a real run reported, but the run had counted one engine test too: the helper was right |
 
 ## 3. Where defects were caught
 
@@ -126,9 +126,11 @@ jump counts in `ARENA_BOTS`. The minimap and the teaser camera got no check.
     *Implication:* an environment pre-flight is a natural infrastructure stage for engine lanes. It would check
     filesystem health, free space on every drive involved, available memory and GPU state.
 11. **Delegation works when both the promise and the evidence are crisp, and slips when they are not.** Helper agents
-    produced research catalogues, a timeline, translations and a blind review. One helper's unverified count (50 tests)
-    reached a README draft and was corrected only after a real run showed 51. The method's PROMISE / EVIDENCE / BOUNDS
-    dispatch form exists to prevent exactly this.
+    produced research catalogues, a timeline, translations and a blind review. One helper counted 50 tests. A real run
+    reported 51, and the docs were changed to match the run, but the run had also counted one engine test whose name
+    matched the `Arena` filter, so the helper had been right. A run's number is evidence only once you read what it
+    counted (conclusion 1). The method's PROMISE / EVIDENCE / BOUNDS dispatch form, which names the evidence up front,
+    exists for exactly this.
 
 ## 5. Options: what next
 
@@ -151,6 +153,7 @@ These are options, not decisions; each belongs to the method's author or to this
 | F. A gated, autonomous re-run | open the next feature as a `df-mission` with the method's hooks wired into the project, `vinculum-map` and `operator-todo` in use, and `df-game-verifier` on every release | interactive vs autonomous and gated, on the same codebase: escaped defects, human interventions, time |
 | G. Publish the gamedev layer | release the 10 gamedev skills, the 5 agents and `Plugins/DFToolset` as an open DF kit (the owner's decision) | others can reproduce this test on their own engine projects |
 | H. Metrics per version | add "defects found by the checks vs by the human" and "hard stops hit" to every QA report | a running measure of how much the checks carry |
+| I. An Argus holdout run | the game is prepared as an Argus system under test ([ARGUS.md](ARGUS.md)); it needs an Argus workspace and a separate tester session whose scenarios the builder never sees | an independent, sealed verdict on the packaged game: conclusions 1 and 5 as a platform |
 
 ## 6. How this report was checked
 
@@ -164,7 +167,9 @@ flagged it. It led to these corrections:
   LAN lab;
 - tier verdicts appear only up to v11;
 - two infrastructure details had no source in the repository;
-- the trademark term was known from v9, not first seen at release.
+- the trademark term was known from v9, not first seen at release;
+- reading the test report itself later showed 50 project tests, not 51: a run of the `Arena` filter also counts one
+  engine test.
 
 The same corrections were made in [BUILT-WITH-CLAUDE.md](BUILT-WITH-CLAUDE.md) and the README where they applied.
 

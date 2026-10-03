@@ -17,7 +17,8 @@ Factory (DF) patterns the work followed, the timeline, the numbers, the engineer
 
 Claude also delegated bounded, read-only jobs to helper agents (a blind code review of the network code, research
 passes over the docs and the code, translation passes) and checked their findings before acting on them. One
-slipped: a helper's count of 50 tests reached a README draft until a real run showed 51.
+check went the wrong way: a helper counted 50 tests, a real run reported 51 and the docs were changed to 51, but
+that run had also counted one engine test caught by the `Arena` name filter. The helper was right.
 
 ## The Dark Factory patterns, as applied here
 
@@ -38,7 +39,7 @@ evidence. In this repository that looks like:
    decision records) for the big turns: data-driven GAS abilities, indicators, aim assist, ranks and items, replication,
    LAN, the Paragon locomotion fix.
 4. **Pure rules, tested in isolation.** Damage, gold, the shop, ranks, the bot brain and Conquest's protection chain
-   are pure functions with no engine objects, covered by six automation specs (17 tests in v1, 51 today).
+   are pure functions with no engine objects, covered by six automation specs (17 tests in v1, 50 today).
 5. **Evidence the game produces by itself.** A dozen in-game *labs* (`-ArenaSkillLab`, `-ArenaFxLab`, `-ProtoLab`…)
    drive the real game through scripted scenarios and print `LAB PASS/FAIL` per check plus screenshots. Seeded,
    headless all-bot matches report stuck bots, casts, turn snaps, jumps and every death by cause. See [TESTING.md](TESTING.md).
@@ -96,7 +97,7 @@ How well the method fit a game, where this run deviated from it, what was conclu
 | Versions | v1 … v22 (plus v7b), the English pass, 4 teasers |
 | Code | ~22,000 lines of C++ in 80 files; ~5,500 lines of Python in 26 tools |
 | Design | 30 validation rules, 14 test scenarios, 14 ADRs, 20 QA reports |
-| Tests | 6 automation specs, 51 tests; ~15 in-game labs; seeded bot matches in most releases |
+| Tests | 6 automation specs, 50 tests; ~15 in-game labs; seeded bot matches in most releases |
 | Content | 11 heroes, 38 skins, 27 items, 4 maps built by scripts, 2 modes (+ 3v3 and 1v1 variants), 2 prototypes |
 
 ## Engineering lessons worth sharing

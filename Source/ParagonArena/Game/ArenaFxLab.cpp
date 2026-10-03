@@ -4,6 +4,7 @@
 // misses a dummy standing in its aim is a LAB FAIL. Then terrain physics: a shot up and a shot down the base ramp at
 // a dummy on the slope must land; a knockback towards a wall must stop the body in front of it. LAB_SUMMARY at the end.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
@@ -56,7 +57,7 @@ void AArenaGameMode::StartFxLab()
 	}
 	Phase = EArenaPhase::Playing;
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=fxlab_start"));
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=fxlab_start"));
 }
 
 void AArenaGameMode::TickFxLab(float Now)
@@ -65,7 +66,7 @@ void AArenaGameMode::TickFxLab(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	const TArray<FArenaHeroDef>& Defs = FArenaDatabase::Get().Heroes;
 	if (T < 2.f) { return; }   // the level, the dummy and the camera settle
@@ -158,7 +159,7 @@ void AArenaGameMode::TickFxLab(float Now)
 			if (GFxLab.Phase != 99)
 			{
 				GFxLab.Phase = 99;
-				UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+				ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 				UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 			}
 			break;
@@ -216,7 +217,7 @@ void AArenaGameMode::TickFxLab(float Now)
 		const FArenaAbilityDef Ab = C->Ability(GFxLab.Slot);
 		const float Dmg = GFxLab.Hp0 - D->GetHealth();
 		const float Moved = FVector::Dist2D(D->GetActorLocation(), GFxLab.DummyAt0);
-		UE_LOG(LogArena, Display, TEXT("FXLAB hero=%s slot=%d ability=%s archetype=%d cast=%d dmg=%.0f moved=%.0f fx=%d castfx=%d trail=%d"), *Defs[GFxLab.Hero].Id.ToString(), GFxLab.Slot, *Ab.Name,
+		ARENA_LOG(LogArena, Display, TEXT("FXLAB hero=%s slot=%d ability=%s archetype=%d cast=%d dmg=%.0f moved=%.0f fx=%d castfx=%d trail=%d"), *Defs[GFxLab.Hero].Id.ToString(), GFxLab.Slot, *Ab.Name,
 			(int32)Ab.Archetype, GFxLab.bCast ? 1 : 0, Dmg, Moved, Ab.Fx.IsEmpty() ? 0 : 1, Ab.CastFx.IsEmpty() ? 0 : 1, Ab.TrailFx.IsEmpty() ? 0 : 1);
 		Check(GFxLab.bCast, FString::Printf(TEXT("%s casts %s"), *Defs[GFxLab.Hero].Id.ToString(), *Ab.Name));
 		// a damaging ability aimed at a dummy standing where it reaches hits it

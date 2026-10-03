@@ -1,0 +1,23 @@
+# An argus-config.yaml for Tartarus Arena, for the tester to start from. It follows the shape of OneDroid's onboarding
+# example (docs.onedroid.ai/argus-example-documenso) and has not been checked with `argus validate-config` yet: that
+# needs the argus CLI, which this project does not have. Addresses are written as the executor sees them from inside
+# the compose network: the harness runs on the Windows host, so it is host.docker.internal, never localhost.
+project:
+  name: tartarus-arena
+targets:
+  http:
+    base_url: http://host.docker.internal:8787     # scheme://host:port only; paths are in each scenario
+  auth:
+    type: bearer
+    bearer_token: ${TARTARUS_SUT_TOKEN}             # the harness's token (Saved/ArgusSUT/token); set it as a secret
+deploy:
+  compose_project: tartarus-sut
+  network: tartarus-sut_default
+observability:
+  loki:
+    log_format: json
+    correlation_field: requestId    # the X-Request-Id of the triggering call, in the harness's and the game's lines
+    level_field: level              # info | warn | error
+    error_match: "error"
+    saga_event_field: event_type
+    saga_event_value: saga          # run.accepted, run.launched, EVIDENCE_OPEN, EVIDENCE_CLOSE, run.exited, run.collected

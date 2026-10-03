@@ -1,4 +1,5 @@
 #include "UI/ArenaHUD.h"
+#include "Game/ArenaEvidence.h"
 #include "UI/ArenaIconStudio.h"
 #include "Game/ArenaGameMode.h"
 #include "Game/ArenaPlayerController.h"
@@ -129,7 +130,7 @@ namespace
 			if (!F.Body) { F.Body = Make(TEXT("Barlow-Medium.ttf"), TEXT("Barlow-SemiBold.ttf")); }
 			if (!F.Head) { F.Head = Make(TEXT("BarlowCondensed-SemiBold.ttf"), TEXT("BarlowCondensed-Bold.ttf")); }
 			F.Title = Make(TEXT("Cinzel-Bold.ttf"), TEXT("Cinzel-Black.ttf"));
-			UE_LOG(LogTemp, Display, TEXT("ARENA evt=hud_fonts body=%d head=%d title=%d rajdhani=%d dir=%s"), F.Body ? 1 : 0, F.Head ? 1 : 0, F.Title ? 1 : 0, F.bRajdhani ? 1 : 0, *Dir);
+			ARENA_LOG(LogTemp, Display, TEXT("ARENA evt=hud_fonts body=%d head=%d title=%d rajdhani=%d dir=%s"), F.Body ? 1 : 0, F.Head ? 1 : 0, F.Title ? 1 : 0, F.bRajdhani ? 1 : 0, *Dir);
 		}
 		return F;
 	}

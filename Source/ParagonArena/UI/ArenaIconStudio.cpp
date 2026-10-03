@@ -1,4 +1,5 @@
 #include "UI/ArenaIconStudio.h"
+#include "Game/ArenaEvidence.h"
 #include "Data/ArenaTypes.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Arena/ArenaScatter.h"
@@ -225,7 +226,7 @@ void AArenaIconStudio::TryShoot()
 	if (!bDone && (bShotOnce || Waited < 10.f)) { return; }
 	// a first picture after 10 s whatever is still compiling (the menu should not stay blank), the final one when
 	// the compiling is over
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=icons_shoot waited=%.1f pending=%d final=%d"), Waited, Pending, bDone ? 1 : 0);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=icons_shoot waited=%.1f pending=%d final=%d"), Waited, Pending, bDone ? 1 : 0);
 	Shoot();
 	bShotOnce = true;
 	bReady = true;
@@ -264,7 +265,7 @@ void AArenaIconStudio::Shoot()
 						Bones += FString::Printf(TEXT(" %s=%s"), *N, *(M->GetBoneLocation(M->GetBoneName(B)) - A->GetActorLocation()).ToCompactString());
 					}
 				}
-				UE_LOG(LogArena, Display, TEXT("ARENA evt=portrait_bones hero=%s bounds=%s/%s%s"), *D.Id.ToString(), *(M->Bounds.Origin - A->GetActorLocation()).ToCompactString(), *M->Bounds.BoxExtent.ToCompactString(), *Bones);
+				ARENA_LOG(LogArena, Display, TEXT("ARENA evt=portrait_bones hero=%s bounds=%s/%s%s"), *D.Id.ToString(), *(M->Bounds.Origin - A->GetActorLocation()).ToCompactString(), *M->Bounds.BoxExtent.ToCompactString(), *Bones);
 			}
 			USceneCaptureComponent2D* C = MakeCapture(Portraits[H], 30.f, Bias);
 			C->ShowOnlyActors.Add(A);
@@ -330,7 +331,7 @@ void AArenaIconStudio::Shoot()
 		int32 N = 0;
 		for (int32 i = 0; i < Px.Num(); i += 7) { Sum += (0.2126 * Px[i].R + 0.7152 * Px[i].G + 0.0722 * Px[i].B) / 255.0; ++N; }
 		const float Mean = N > 0 ? static_cast<float>(Sum / N) : 0.5f;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=minimap pass=%d bias=%.2f mean=%.3f"), Pass, MapBias, Mean);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=minimap pass=%d bias=%.2f mean=%.3f"), Pass, MapBias, Mean);
 		if (FMath::Abs(Mean - 0.44f) < 0.04f || Pass == 2) { break; }
 		// display values are about exposure^(1/2.2): the step in EV is 2.2 x log2 of the ratio
 		MapBias += FMath::Clamp(2.2f * FMath::Log2(0.44f / FMath::Max(0.02f, Mean)), -4.f, 4.f);
@@ -460,5 +461,5 @@ void AArenaIconStudio::Finish()
 	for (UPointLightComponent* L : Lights) { if (L) { L->DestroyComponent(); } }
 	for (USceneCaptureComponent2D* C : Captures) { if (C) { C->DestroyComponent(); } }
 	PortraitBooths.Reset(); IconBooths.Reset(); Lights.Reset(); Captures.Reset();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=icons portraits=%d icons=%d minimap=%dx%d"), Portraits.Num(), Icons.Num(), MapW, MapH);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=icons portraits=%d icons=%d minimap=%dx%d"), Portraits.Num(), Icons.Num(), MapW, MapH);
 }

@@ -5,6 +5,7 @@
 // The dummies (enemy heroes, no controller) regenerate when hurt and come back 1.5 s after a death; one of them walks
 // side to side (aiming at a moving target). The HUD shows the player's damage per second over the last 5 s.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/PlayerStart.h"
@@ -65,7 +66,7 @@ void AArenaGameMode::StartTraining(int32 HeroIndex)
 	Phase = EArenaPhase::Playing;
 	MatchStart = GetWorld()->GetTimeSeconds();
 	Announce(this, TEXT("TRAINING CENTER"), true, FLinearColor(0.6f, 0.85f, 1.f));
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=training_start hero=%s dummies=%d"), *Defs[PlayerHeroIndex].Id.ToString(), TrainingDummies.Num());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=training_start hero=%s dummies=%d"), *Defs[PlayerHeroIndex].Id.ToString(), TrainingDummies.Num());
 }
 
 void AArenaGameMode::TrainingKey(int32 Key)
@@ -177,7 +178,7 @@ void AArenaGameMode::TickTrainingDemo(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	AArenaCharacter* Target = nullptr;
 	for (const FTrainingDummy& D : TrainingDummies) { if (D.Unit.IsValid() && D.Unit->IsAlive() && !D.bMover && (!Target || (Me && FVector::Dist(D.Unit->GetActorLocation(), Me->GetActorLocation()) < FVector::Dist(Target->GetActorLocation(), Me->GetActorLocation())))) { Target = D.Unit.Get(); } }
@@ -231,7 +232,7 @@ void AArenaGameMode::TickTrainingDemo(float Now)
 			int32 Full = 0, Alive = 0;
 			for (const FTrainingDummy& D : TrainingDummies) { if (D.Unit.IsValid() && D.Unit->IsAlive()) { ++Alive; Full += D.Unit->GetHealth() >= D.Unit->GetMaxHealth() - 1.f ? 1 : 0; } }
 			Check(Alive == TrainingDummies.Num() && Full == Alive, FString::Printf(TEXT("the dummies are all standing and mended after a rest: %d alive, %d at full health of %d"), Alive, Full, TrainingDummies.Num()));
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			++TrainingDemoStep;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}

@@ -1,4 +1,5 @@
 #include "Abilities/ArenaAbility.h"
+#include "Game/ArenaEvidence.h"
 #include "AbilitySystemComponent.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Arena/ArenaFx.h"
@@ -348,7 +349,7 @@ void UArenaAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		const int32 NumVariants = FMath::Max(1, Ab.AnimVariants.Num());
 		Hero->MulticastCast((uint8)Slot, (uint8)(((VariantIndex - 1) % NumVariants + NumVariants) % NumVariants), Aim, Target.Get());
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=cast hero=%s team=%d slot=%d ability=%s assist=%d"), Hero->GetWorld()->GetTimeSeconds(), *Hero->GetDef().Id.ToString(), Hero->GetTeam(), Slot, *Ab.Name, Target.IsValid() ? 1 : 0);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=cast hero=%s team=%d slot=%d ability=%s assist=%d"), Hero->GetWorld()->GetTimeSeconds(), *Hero->GetDef().Id.ToString(), Hero->GetTeam(), Slot, *Ab.Name, Target.IsValid() ? 1 : 0);
 
 	FTimerHandle ExecTimer;
 	TWeakObjectPtr<AArenaCharacter> WeakHero(Hero);

@@ -1,4 +1,5 @@
 #include "Proto/ProtoGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Proto/ProtoCharacter.h"
 #include "Proto/ProtoBotController.h"
 #include "Proto/ProtoPlayerController.h"
@@ -63,7 +64,7 @@ void AProtoGameMode::BeginPlay()
 	if (bUIShots) { SetTickableWhenPaused(true); UIT0 = GetWorld()->GetRealTimeSeconds(); }
 	if (FParse::Value(FCommandLine::Get(), TEXT("ProtoDiff="), Difficulty)) { Difficulty = FMath::Clamp(Difficulty, 0, 2); }
 	LabT0 = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogProtoMode, Display, TEXT("PROTO evt=boot patrol=%d cam=%d lab=%d hades=%d"), PatrolPoints.Num(), OverviewCam ? 1 : 0, bLab ? 1 : 0, bHades ? 1 : 0);
+	ARENA_LOG(LogProtoMode, Display, TEXT("PROTO evt=boot patrol=%d cam=%d lab=%d hades=%d"), PatrolPoints.Num(), OverviewCam ? 1 : 0, bLab ? 1 : 0, bHades ? 1 : 0);
 	if (bLab) { LabFile(FString::Printf(TEXT("LAB_START %s patrol=%d cam=%d hades=%d"), *FDateTime::Now().ToString(), PatrolPoints.Num(), OverviewCam ? 1 : 0, bHades ? 1 : 0)); }
 	AArenaTeaserDirector::MaybeStart(GetWorld());   // -ArenaTeaser=duel|hades: the teaser's film camera
 	if (FParse::Param(FCommandLine::Get(), TEXT("ProtoDuel")))
@@ -147,7 +148,7 @@ void AProtoGameMode::StartMatch(EProtoMode InMode)
 	Phase = EProtoPhase::Playing;
 	MatchStart = GetWorld()->GetTimeSeconds();
 	if (AProtoPlayerController* PC = Cast<AProtoPlayerController>(GetWorld()->GetFirstPlayerController())) { PC->OnMatchStarted(); }
-	UE_LOG(LogProtoMode, Display, TEXT("PROTO evt=start mode=%d bots=%d diff=%d"), (int32)Mode, NumBots, Difficulty);
+	ARENA_LOG(LogProtoMode, Display, TEXT("PROTO evt=start mode=%d bots=%d diff=%d"), (int32)Mode, NumBots, Difficulty);
 }
 
 void AProtoGameMode::BackToMenu()
@@ -167,7 +168,7 @@ void AProtoGameMode::OnKnockout(AProtoCharacter* Victim, AProtoCharacter* Killer
 {
 	if (!Victim) { return; }
 	if (Victim->bIsBot) { ++PlayerKOs; } else { ++BotKOs; }
-	UE_LOG(LogProtoMode, Display, TEXT("PROTO t=%.1f evt=ko victim=%s killer=%s score=%d:%d"), GetWorld()->GetTimeSeconds(), *Victim->GetName(), Killer ? *Killer->GetName() : TEXT("-"), PlayerKOs, BotKOs);
+	ARENA_LOG(LogProtoMode, Display, TEXT("PROTO t=%.1f evt=ko victim=%s killer=%s score=%d:%d"), GetWorld()->GetTimeSeconds(), *Victim->GetName(), Killer ? *Killer->GetName() : TEXT("-"), PlayerKOs, BotKOs);
 	if (!bLab) { Respawns.Add({ Victim, float(GetWorld()->GetTimeSeconds()) + 3.5f }); }
 }
 
@@ -207,7 +208,7 @@ void AProtoGameMode::LabFile(const FString& Line)
 void AProtoGameMode::Check(bool bOk, const FString& What)
 {
 	(bOk ? LabPasses : LabFails) += 1;
-	UE_LOG(LogProtoMode, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+	ARENA_LOG(LogProtoMode, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	LabFile(FString::Printf(TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What));
 }
 
@@ -610,7 +611,7 @@ void AProtoGameMode::TickLab(float Now)
 	case 19:
 		if (T > 1.f)
 		{
-			UE_LOG(LogProtoMode, Display, TEXT("LAB_SUMMARY fails=%d passes=%d"), LabFails, LabPasses);
+			ARENA_LOG(LogProtoMode, Display, TEXT("LAB_SUMMARY fails=%d passes=%d"), LabFails, LabPasses);
 			LabFile(FString::Printf(TEXT("LAB_SUMMARY fails=%d passes=%d"), LabFails, LabPasses));
 			bLab = false;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);

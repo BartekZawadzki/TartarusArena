@@ -199,7 +199,7 @@ Replaces the ticket ledger with `ArenaCore::FScoreLedger` (points + limit + cloc
 - Rendering: D3D12 with **both SM5 and SM6** cooked. In UE 5.8 Lumen on D3D requires SM6 (`DoesPlatformSupportLumenGI`;
   on SM5 it silently fell back to DFAO), but SM6 alone cost ~30 % of the frame rate at High; so the game starts on
   SM5 (`DefaultGameUserSettings.ini [D3DRHIPreference] PreferredFeatureLevel=sm5`) and `FArenaSettings::SyncShaderModel`
-  writes sm6 only for Epic ("Epicka · Lumen", effective at the next start). Scalability (`DefaultScalability.ini`):
+  writes sm6 only for Epic ("Epic · Lumen", effective at the next start). Scalability (`DefaultScalability.ini`):
   Epic = software Lumen GI + reflections from mesh distance fields, trimmed; High = no Lumen; CSM + distance-field shadows past 90 m; contact shadows; volumetric fog (High/Epic);
   post: histogram exposure EV100 1–3.5, local exposure, slight saturation / contrast; small scatter meshes out of the
   distance fields and Lumen, WPO off past 30 / 60 m. Minimap capture: no dynamic shadows, exposure calibrated from a

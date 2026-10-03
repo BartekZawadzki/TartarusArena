@@ -4,6 +4,7 @@
 // the buff), the boss (no crowd control, the team buff) and the core's fall ending the match. Prints LAB PASS/FAIL
 // and LAB_SUMMARY like the other labs; screenshots CQ_*.png.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Game/ArenaPlayerController.h"
 #include "Heroes/ArenaCharacter.h"
 #include "AI/ArenaBotController.h"
@@ -42,7 +43,7 @@ void AArenaGameMode::StartConquestLab()
 	bConquest = true;
 	bFountainsOn = true;
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=conquestlab_start"));
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=conquestlab_start"));
 }
 
 void AArenaGameMode::TickConquestLab(float Now, float Dt)
@@ -51,7 +52,7 @@ void AArenaGameMode::TickConquestLab(float Now, float Dt)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	const FArenaConquestDef& Cq = Rules.Conquest;
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
@@ -292,7 +293,7 @@ void AArenaGameMode::TickConquestLab(float Now, float Dt)
 		{
 			if (AArenaCharacter* B = GCq.Monster.Get())
 			{
-				UE_LOG(LogArena, Display, TEXT("LAB boss body: bounds=%s scale=%.2f materials=%d"), *B->GetMesh()->Bounds.BoxExtent.ToCompactString(), B->GetActorScale3D().X, B->GetMesh()->GetNumMaterials());
+				ARENA_LOG(LogArena, Display, TEXT("LAB boss body: bounds=%s scale=%.2f materials=%d"), *B->GetMesh()->Bounds.BoxExtent.ToCompactString(), B->GetActorScale3D().X, B->GetMesh()->GetNumMaterials());
 				B->ReceiveHit(99999.f, H, Basic());
 				if (PC && H) { PC->SetViewTarget(H); PC->bAutoManageActiveCameraTarget = true; }
 			}
@@ -352,7 +353,7 @@ void AArenaGameMode::TickConquestLab(float Now, float Dt)
 	case 90:
 		if (T > GCq.StepT + 1.f)
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			++LabStep;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}

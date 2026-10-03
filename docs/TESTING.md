@@ -26,7 +26,9 @@ Typical editor-build run:
 
 `UnrealEditor-Cmd.exe <uproject> -ExecCmds="Automation RunTests Arena;Quit" -unattended -nullrhi -nosplash -NoSound -ReportExportPath=<dir>`
 
-Six specs, 51 tests in a full run. They run in the editor build (`EditorContext`), not in the packaged game.
+Six specs, 50 tests. A run of the `Arena` filter reports 51, because it also picks up one engine test whose name
+contains the word (`RigLogic.RigLogicLib.ArenaMemoryResourceTest`). They run in the editor build (`EditorContext`),
+not in the packaged game.
 
 | Spec | Covers |
 |---|---|
@@ -54,7 +56,7 @@ Six specs, 51 tests in a full run. They run in the editor build (`EditorContext`
 | `-ArenaAimLab` | Arena | aim assistance through the real player controller: 20 shots without and 20 with assist at a strafing hero, hit markers, the hit flash, melee turn and step-in. `AIM_*.png` |
 | `-ArenaTrainingDemo` | Training (`?Hero=N`) | the training room: casts with cooldowns off, the DPS meter, level 20, dummies mending. `TRAIN_*.png` |
 | `-ArenaNetHost` / `-ArenaNetGuest` | Arena, two instances | LAN: the host reopens Arena as a listen server and waits for a guest; the guest joins 127.0.0.1, picks a hero, fights; both run replication checks. Run alone (two instances need the memory) |
-| `-ArenaNavCheck` | Arena / Conquest | paths from base to base, the orb and every lane point: `ARENA evt=navcheck points=N unreachable=M` |
+| `-ArenaNavCheck` | Arena / Conquest | at the start of a match (add it to `-ArenaBotMatch`; alone, the game waits in its menu): paths from base to base, the orb and every lane point: `ARENA evt=navcheck points=N unreachable=M` |
 | `-ProtoLab` | Proto | prototype 1: run, sprint, sneak, jumps, mantle, wall jump, dodge, light combo, heavy and launch with air slashes, perfect dodge and counter, camera-aimed swings, hit reactions, air slam, lock-on strafe, the bot's fight and sight. Also appended to `Saved/ProtoLab.txt` |
 | `-ProtoLab -ProtoHades` | Proto | prototype 2 (Hades controls): the fixed camera, WASD on the screen, the dash, cursor attacks, the cast, the smash, the call, the camera cutaway, the bot |
 
@@ -89,6 +91,7 @@ slow motion) and `-TeaserBots` (Proto: two bots). The pipeline from frames to a 
 
 | Switch | What it does |
 |---|---|
+| `-EvidenceJournal=<id>` | writes every game log line as JSON with `requestId=<id>` to `Saved/Evidence/<id>.jsonl`, also in the Shipping build, which has no log ([ARGUS.md](ARGUS.md)) |
 | `-ArenaCmdAt=T:cmd\|T:cmd` | runs console commands at world times, e.g. `60:profilegpu\|90:stat unit` |
 | `-ArenaNoHorizon` | hides the far cliff ring (a rendering-cost A/B) |
 | `-ArenaNoFadeMats` | heroes keep the packs' materials, without the fade copies |
@@ -96,6 +99,13 @@ slow motion) and `-TeaserBots` (Proto: two bots). The pipeline from frames to a 
 | `-ArenaAnimDebug` | each character logs its animation state every 4 s |
 | `-ArenaDumpAnimBP=/Game/...` | with `-ArenaLocoLab` in the editor: dumps an animation blueprint's graphs, nodes and links |
 | `-DuelOnly=<Ranged>-<Melee>` · `-DuelRepeat` · `-DuelSeed` · `-DuelStart` · `-DuelCount` · `-DuelTrace` | the duel lab: one matchup, repeats, seed, range, a per-second trace |
+
+## The game as a system under test
+
+[`Tools/ArgusSUT/server.mjs`](../Tools/ArgusSUT/server.mjs) starts the packaged game's headless checks over HTTP and
+reports what the game's evidence journal says, for an external tester such as Argus. `selftest.mjs` checks its
+contract and `sweep.mjs` runs every check once. The contract, the safety rules and the Argus onboarding are in
+[ARGUS.md](ARGUS.md).
 
 ## The packaged game
 

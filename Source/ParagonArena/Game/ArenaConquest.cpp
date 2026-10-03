@@ -2,6 +2,7 @@
 // inner tower and an inhibitor in front of the team's core (LoL); neutral camps with buffs in the jungle and the
 // Prime Helix boss in the centre. The game mode is the authority; AArenaGameState carries what the players see.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Game/ArenaGameState.h"
 #include "Heroes/ArenaCharacter.h"
 #include "AI/ArenaBotController.h"
@@ -143,7 +144,7 @@ void AArenaGameMode::StartConquest()
 	BossTeam = -1;
 	BossUntil = 0.f;
 	NextOrb = -1.f;   // no power orb: the boss holds the centre
-	if (Lanes.Num() == 0) { UE_LOG(LogArena, Warning, TEXT("ARENA evt=conquest_no_lanes")); return; }
+	if (Lanes.Num() == 0) { ARENA_LOG(LogArena, Warning, TEXT("ARENA evt=conquest_no_lanes")); return; }
 	// the structures are laid out on team A's half and mirrored (x -> -x) for team B: the map is symmetric
 	for (int32 L = 0; L < Lanes.Num(); ++L)
 	{
@@ -182,7 +183,7 @@ void AArenaGameMode::StartConquest()
 				S.bAlive = S.Unit.IsValid();
 				S.bOnNav = bOk;
 				S.LastHp = S.bAlive ? S.Unit->GetHealth() : 0.f;
-				UE_LOG(LogArena, Display, TEXT("ARENA evt=conquest_place kind=%d team=%d lane=%d tier=%d at=%s on_nav=%d spawned=%d"), Kind, Team, L, Tier, *Spot.ToCompactString(), bOk ? 1 : 0, S.bAlive ? 1 : 0);
+				ARENA_LOG(LogArena, Display, TEXT("ARENA evt=conquest_place kind=%d team=%d lane=%d tier=%d at=%s on_nav=%d spawned=%d"), Kind, Team, L, Tier, *Spot.ToCompactString(), bOk ? 1 : 0, S.bAlive ? 1 : 0);
 			}
 		}
 	}
@@ -196,7 +197,7 @@ void AArenaGameMode::StartConquest()
 		S.bAlive = S.Unit.IsValid();
 		S.bOnNav = bOk;
 		S.LastHp = S.bAlive ? S.Unit->GetHealth() : 0.f;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=conquest_place kind=3 team=%d at=%s on_nav=%d spawned=%d"), Team, *Spot.ToCompactString(), bOk ? 1 : 0, S.bAlive ? 1 : 0);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=conquest_place kind=3 team=%d at=%s on_nav=%d spawned=%d"), Team, *Spot.ToCompactString(), bOk ? 1 : 0, S.bAlive ? 1 : 0);
 	}
 	UpdateProtection();
 	// the camps: team A's half as written, team B's mirrored
@@ -207,14 +208,14 @@ void AArenaGameMode::StartConquest()
 		{
 			bool bOk = false;
 			const FVector Spot = GroundSpot(FVector(D.Spot.X * (Side == 0 ? 1.f : -1.f), D.Spot.Y, 100.f), &bOk);
-			if (!bOk) { UE_LOG(LogArena, Warning, TEXT("ARENA evt=camp_off_nav name=%s side=%d"), *D.Name, Side); continue; }
+			if (!bOk) { ARENA_LOG(LogArena, Warning, TEXT("ARENA evt=camp_off_nav name=%s side=%d"), *D.Name, Side); continue; }
 			FCamp& C = Camps.AddDefaulted_GetRef();
 			C.Def = i; C.Side = Side; C.Spot = Spot; C.Yaw = Side == 0 ? D.Yaw : 180.f - D.Yaw;
 			C.RespawnAt = D.FirstSpawn;   // seconds into the match
-			UE_LOG(LogArena, Display, TEXT("ARENA evt=conquest_camp name=%s side=%d at=%s buff=%d first=%.0f"), *D.Name, Side, *Spot.ToCompactString(), D.Buff, D.FirstSpawn);
+			ARENA_LOG(LogArena, Display, TEXT("ARENA evt=conquest_camp name=%s side=%d at=%s buff=%d first=%.0f"), *D.Name, Side, *Spot.ToCompactString(), D.Buff, D.FirstSpawn);
 		}
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=conquest_start structures=%d camps=%d lanes=%d"), Structures.Num(), Camps.Num(), Lanes.Num());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=conquest_start structures=%d camps=%d lanes=%d"), Structures.Num(), Camps.Num(), Lanes.Num());
 }
 
 void AArenaGameMode::UpdateProtection()
@@ -250,7 +251,7 @@ void AArenaGameMode::TickConquest(float Now, float Dt)
 			}
 			Line += FString::Printf(TEXT(" core%d=%.0f%%%s attackers=%d+%dm"), S.Team, U->HealthPct() * 100.f, U->bInvulnerable ? TEXT("_shut") : TEXT("_open"), AtHeroes, AtMinions);
 		}
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.0f evt=cq_snapshot%s"), Now - MatchStart, *Line);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.0f evt=cq_snapshot%s"), Now - MatchStart, *Line);
 	}
 }
 
@@ -272,7 +273,7 @@ void AArenaGameMode::TickStructures(float Now, float Dt)
 				S.LastHp = S.bAlive ? S.Unit->GetHealth() : 0.f;
 				UpdateProtection();
 				AnnounceFor(S.Team, TEXT("Our inhibitor is back up"), ConquestOrange, TEXT("Enemy inhibitor is back up"), ConquestOrange, false);
-				UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=inhibitor_back team=%d lane=%d"), Now, S.Team, S.Lane);
+				ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=inhibitor_back team=%d lane=%d"), Now, S.Team, S.Lane);
 			}
 			continue;
 		}
@@ -369,7 +370,7 @@ void AArenaGameMode::SpawnCamp(FCamp& Camp, float Now)
 	}
 	Camp.bUp = Camp.Units.Num() > 0;
 	if (D.Buff == 3 && Camp.bUp) { Announce(this, FString::Printf(TEXT("%s has appeared in the center of the map!"), *D.Name), true, ConquestPurple); }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=camp_spawn name=%s side=%d units=%d level=%d"), Now, *D.Name, Camp.Side, Camp.Units.Num(), Level);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=camp_spawn name=%s side=%d units=%d level=%d"), Now, *D.Name, Camp.Side, Camp.Units.Num(), Level);
 }
 
 void AArenaGameMode::TickCamps(float Now)
@@ -411,7 +412,7 @@ void AArenaGameMode::OnMonsterKilled(AArenaCharacter* M, AArenaCharacter* Killer
 	}
 	int32 Left = 0;
 	for (const TWeakObjectPtr<AArenaCharacter>& U : Camp->Units) { Left += U.IsValid() && U.Get() != M && U->IsAlive() ? 1 : 0; }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=monster_kill name=%s killer=%s team=%d left=%d"), Now, *D.Name, Hero ? *Hero->GetDef().Id.ToString() : TEXT("none"), KTeam, Left);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=monster_kill name=%s killer=%s team=%d left=%d"), Now, *D.Name, Hero ? *Hero->GetDef().Id.ToString() : TEXT("none"), KTeam, Left);
 	if (Left > 0) { return; }
 	Camp->bUp = false;
 	Camp->Units.Reset();
@@ -438,7 +439,7 @@ void AArenaGameMode::OnMonsterKilled(AArenaCharacter* M, AArenaCharacter* Killer
 		for (const TWeakObjectPtr<AArenaCharacter>& W : Team) { if (W.IsValid() && W->GetTeam() == KTeam) { W->Gold += D.Gold; } }
 		for (FArenaRespawn& R : Respawns) { if (R.Team == KTeam) { R.Gold += D.Gold; } }
 		AnnounceFor(KTeam, FString::Printf(TEXT("We defeated %s! Helix Power: +damage, +speed, stronger waves"), *D.Name), ConquestPurple, FString::Printf(TEXT("Enemies defeated %s!"), *D.Name), ConquestRed, true);
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=boss_kill team=%d until=%.0f"), Now, KTeam, BossUntil);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=boss_kill team=%d until=%.0f"), Now, KTeam, BossUntil);
 	}
 }
 
@@ -484,7 +485,7 @@ void AArenaGameMode::OnStructureDestroyed(AArenaCharacter* Unit, AArenaCharacter
 		AnnounceFor(St->Team, FString::Printf(TEXT("We lost our %s%s"), What, *Where), ConquestRed, FString::Printf(TEXT("Destroyed the enemy's %s%s"), What, *Where), ConquestGold, St->Kind == ArenaConquest::Inhibitor);
 		if (St->Kind == ArenaConquest::Inhibitor) { AnnounceFor(St->Team, TEXT("The enemy is fielding super minions on this lane!"), ConquestRed, TEXT("Our waves on this lane are led by a super minion!"), ConquestGold, false); }
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=structure_down kind=%d team=%d lane=%d tier=%d killer=%s credit=%s left=%d/%d"), Now, St->Kind, St->Team, St->Lane, St->Tier,
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=structure_down kind=%d team=%d lane=%d tier=%d killer=%s credit=%s left=%d/%d"), Now, St->Kind, St->Team, St->Lane, St->Tier,
 		Killer ? *Killer->GetDef().Id.ToString() : TEXT("none"), Hero ? *Hero->GetDef().Id.ToString() : TEXT("none"), StructuresLeft(0), StructuresLeft(1));
 }
 
@@ -539,7 +540,7 @@ void AArenaGameMode::SpawnConquestWave()
 			}
 		}
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=wave mode=conquest index=%d minions=%d siege=%d level=%d"), Now, WaveIndex, Spawned, bSiegeWave ? 1 : 0, WaveLevel);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=wave mode=conquest index=%d minions=%d siege=%d level=%d"), Now, WaveIndex, Spawned, bSiegeWave ? 1 : 0, WaveLevel);
 	++WaveIndex;
 }
 

@@ -4,6 +4,7 @@
 // takes LAB_*.png screenshots (Saved/Screenshots/<platform>) as visual evidence. Needs a rendering run (no -nullrhi)
 // for the pictures; the measured checks also work headless.
 #include "Game/ArenaGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Heroes/ArenaPoseBlendInstance.h"
 #include "AI/ArenaBotController.h"
@@ -67,7 +68,7 @@ void AArenaGameMode::StartAnimLab()
 		if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) { PC->SetViewTarget(Cam); }
 	}
 	LabStart = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=lab_start units=%d"), LabUnits.Num());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=lab_start units=%d"), LabUnits.Num());
 }
 
 void AArenaGameMode::TickAnimLab(float Now)
@@ -81,7 +82,7 @@ void AArenaGameMode::TickAnimLab(float Now)
 	auto Check = [this](bool bOk, const FString& What)
 	{
 		LabFails += bOk ? 0 : 1;
-		UE_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
+		ARENA_LOG(LogArena, Display, TEXT("LAB %s %s"), bOk ? TEXT("PASS") : TEXT("FAIL"), *What);
 	};
 	auto Hit = [this](AArenaCharacter* C, float Amount)
 	{
@@ -240,7 +241,7 @@ void AArenaGameMode::TickAnimLab(float Now)
 			for (TActorIterator<AArenaCharacter> It(GetWorld()); It; ++It)
 			{
 				Visible += It->IsHidden() ? 0 : 1;
-				UE_LOG(LogArena, Display, TEXT("LAB unit %s alive=%d hidden=%d at=%s"), *It->GetDef().Id.ToString(), It->IsAlive() ? 1 : 0, It->IsHidden() ? 1 : 0, *It->GetActorLocation().ToCompactString());
+				ARENA_LOG(LogArena, Display, TEXT("LAB unit %s alive=%d hidden=%d at=%s"), *It->GetDef().Id.ToString(), It->IsAlive() ? 1 : 0, It->IsHidden() ? 1 : 0, *It->GetActorLocation().ToCompactString());
 			}
 			Check(Visible == U.Num(), FString::Printf(TEXT("only the new line-up is visible: %d characters shown for %d units"), Visible, U.Num()));
 			// stack: unit 1 dropped dead-centre onto unit 0's head
@@ -326,7 +327,7 @@ void AArenaGameMode::TickAnimLab(float Now)
 			if (AAIController* AI = Cast<AAIController>(U[2]->GetController()))
 			{
 				const EPathFollowingRequestResult::Type R = AI->MoveToLocation(FVector(-3174.f, -309.f, 22.f), 50.f, true, true, false, true);
-				UE_LOG(LogArena, Display, TEXT("LAB altar move request=%d"), (int32)R);
+				ARENA_LOG(LogArena, Display, TEXT("LAB altar move request=%d"), (int32)R);
 			}
 			++LabStep;
 		}
@@ -337,7 +338,7 @@ void AArenaGameMode::TickAnimLab(float Now)
 			const UCharacterMovementComponent* M = U[2]->GetCharacterMovement();
 			const AAIController* AI = Cast<AAIController>(U[2]->GetController());
 			const UPathFollowingComponent* PF = AI ? AI->GetPathFollowingComponent() : nullptr;
-			UE_LOG(LogArena, Display, TEXT("LAB altar t=%.2f pos=%s accel=%.0f vel=%.0f mode=%d floor=%s walkable=%d status=%d idx=%d pts=%d"), T, *U[2]->GetActorLocation().ToCompactString(),
+			ARENA_LOG(LogArena, Display, TEXT("LAB altar t=%.2f pos=%s accel=%.0f vel=%.0f mode=%d floor=%s walkable=%d status=%d idx=%d pts=%d"), T, *U[2]->GetActorLocation().ToCompactString(),
 				M->GetCurrentAcceleration().Size(), U[2]->GetVelocity().Size2D(), (int32)M->MovementMode, M->CurrentFloor.HitResult.GetActor() ? *M->CurrentFloor.HitResult.GetActor()->GetName() : TEXT("none"),
 				M->CurrentFloor.bWalkableFloor ? 1 : 0, PF ? (int32)PF->GetStatus() : -1, PF ? (int32)PF->GetCurrentPathIndex() : -1, PF && PF->GetPath().IsValid() ? PF->GetPath()->GetPathPoints().Num() : -1);
 		}
@@ -353,7 +354,7 @@ void AArenaGameMode::TickAnimLab(float Now)
 	case 29:
 		if (T > 39.0f)
 		{
-			UE_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
+			ARENA_LOG(LogArena, Display, TEXT("LAB_SUMMARY fails=%d"), LabFails);
 			++LabStep;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
 		}

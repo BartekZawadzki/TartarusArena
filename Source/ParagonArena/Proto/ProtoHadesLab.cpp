@@ -3,6 +3,7 @@
 // cursor, the dash-strike, the cast, the special's smash around and its charge, the call, the perfect dodge, the
 // buildings cut away between the camera and the hero, and the bot with the same moves.
 #include "Proto/ProtoGameMode.h"
+#include "Game/ArenaEvidence.h"
 #include "Proto/ProtoCharacter.h"
 #include "Proto/ProtoBotController.h"
 #include "Proto/ProtoHadesPlayerController.h"
@@ -263,7 +264,7 @@ void AProtoGameMode::TickHadesLab(float Now)
 	case 15:
 		if (T > 1.f)
 		{
-			UE_LOG(LogTemp, Display, TEXT("LAB_SUMMARY fails=%d passes=%d"), LabFails, LabPasses);
+			ARENA_LOG(LogTemp, Display, TEXT("LAB_SUMMARY fails=%d passes=%d"), LabFails, LabPasses);
 			LabFile(FString::Printf(TEXT("LAB_SUMMARY fails=%d passes=%d"), LabFails, LabPasses));
 			bLab = false;
 			UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);

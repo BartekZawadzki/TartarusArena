@@ -1,4 +1,5 @@
 #include "Heroes/ArenaCharacter.h"
+#include "Game/ArenaEvidence.h"
 #include "AnimationRuntime.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/ArenaAttributeSet.h"
@@ -137,7 +138,7 @@ void AArenaCharacter::InitCharacter(const FArenaHeroDef& InDef, int32 InTeam, in
 		SpringArm->TargetOffset = FVector(0.f, 0.f, 90.f * K);
 		SpringArm->SocketOffset = FVector(0.f, 70.f * (1.f + (K - 1.f) * 1.4f), 0.f);
 		BaseSocketOffset = SpringArm->SocketOffset;
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=camera_frame id=%s height=%.0f k=%.2f arm=%.0f"), *Def.Id.ToString(), Height, K, SpringArm->TargetArmLength);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=camera_frame id=%s height=%.0f k=%.2f arm=%.0f"), *Def.Id.ToString(), Height, K, SpringArm->TargetArmLength);
 	}
 
 	// Team-readable tint: hero colour mixed with the team colour (blue / red).
@@ -473,7 +474,7 @@ bool AArenaCharacter::RankUp(int32 Slot)
 	if (!CanRankUp(Slot)) { return false; }
 	++Ranks[Slot];
 	if (bAssistedAim) { Voice(TEXT("Level_AbilityLevelConfirm"), 1.5f); }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=rank hero=%s team=%d slot=%d rank=%d level=%d points=%d"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Slot, Ranks[Slot], Level, FreeSkillPoints());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=rank hero=%s team=%d slot=%d rank=%d level=%d points=%d"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Slot, Ranks[Slot], Level, FreeSkillPoints());
 	return true;
 }
 
@@ -571,7 +572,7 @@ bool AArenaCharacter::StartRecall()
 	RecallFxComp = ArenaFx::AttachAt(FArenaDatabase::Get().Rules.RecallFx, GetMesh(), NAME_None, FArenaDatabase::Get().Rules.RecallSeconds + 0.2f);
 	NetStatus(5, FArenaDatabase::Get().Rules.RecallSeconds);
 	ArenaFx::Spawn(this, FArenaDatabase::Get().Rules.RespawnFx, GetActorLocation() - FVector(0.f, 0.f, 90.f), FLinearColor(0.5f, 0.8f, 1.f), 0.6f);
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=recall hero=%s team=%d"), RecallStart, *Def.Id.ToString(), Team);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=recall hero=%s team=%d"), RecallStart, *Def.Id.ToString(), Team);
 	return true;
 }
 
@@ -581,7 +582,7 @@ void AArenaCharacter::CancelRecall(const TCHAR* Why)
 	RecallStart = -1.f;
 	if (RecallFxComp.IsValid()) { RecallFxComp->Deactivate(); }
 	NetStatus(6, 0.f);
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=recall_cancel hero=%s team=%d why=%s"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Why);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=recall_cancel hero=%s team=%d why=%s"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Why);
 }
 
 float AArenaCharacter::RecallProgress() const
@@ -597,7 +598,7 @@ bool AArenaCharacter::DrinkPotion(int32 Kind)
 	PotionUntil[Kind] = GetWorld()->GetTimeSeconds() + FMath::Max(0.5f, R.PotionSeconds);
 	PotionRate[Kind] = (Kind == 0 ? R.PotionHeal : R.PotionMana) / FMath::Max(0.5f, R.PotionSeconds);
 	if (Kind == 1) { ArenaFx::AttachAt(R.ManaFx, GetMesh(), NAME_None, 1.5f); NetStatus(7, 1.5f); }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=potion hero=%s team=%d kind=%d left=%d"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Kind, Potions[Kind]);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=potion hero=%s team=%d kind=%d left=%d"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Kind, Potions[Kind]);
 	return true;
 }
 
@@ -616,7 +617,7 @@ void AArenaCharacter::TickSustain(float Now, float Dt)
 			SetActorLocation(Home, false, nullptr, ETeleportType::TeleportPhysics);
 			GetCharacterMovement()->StopMovementImmediately();
 			ArenaFx::Spawn(this, R.RespawnFx, Home - FVector(0.f, 0.f, 90.f), FLinearColor(0.5f, 0.8f, 1.f));
-			UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=recall_done hero=%s team=%d"), Now, *Def.Id.ToString(), Team);
+			ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=recall_done hero=%s team=%d"), Now, *Def.Id.ToString(), Team);
 		}
 	}
 	// potions: health / mana over time
@@ -664,7 +665,7 @@ void AArenaCharacter::MakeStructure(int32 Kind, int32 Lane, int32 Tier)
 	}
 	const float R = GetCapsuleComponent()->GetUnscaledCapsuleRadius() + 20.f / FMath::Max(0.1f, GetActorScale3D().X);
 	NavBlock->SetBoxExtent(FVector(R, R, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()));
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=structure kind=%d team=%d lane=%d tier=%d at=%s radius=%.0f"), Kind, Team, Lane, Tier, *GetActorLocation().ToCompactString(), GetCapsuleComponent()->GetScaledCapsuleRadius());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=structure kind=%d team=%d lane=%d tier=%d at=%s radius=%.0f"), Kind, Team, Lane, Tier, *GetActorLocation().ToCompactString(), GetCapsuleComponent()->GetScaledCapsuleRadius());
 }
 
 void AArenaCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -925,7 +926,7 @@ void AArenaCharacter::ApplyCampBuff(int32 Kind, float Seconds)
 	const TArray<FString>& Fx = FArenaDatabase::Get().Rules.Conquest.BuffFx;
 	if (CampBuffFx[Kind].IsValid()) { CampBuffFx[Kind]->Deactivate(); }
 	if (Fx.IsValidIndex(Kind)) { CampBuffFx[Kind] = ArenaFx::AttachAt(Fx[Kind], GetMesh(), NAME_None, Seconds); }
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=camp_buff hero=%s team=%d kind=%d seconds=%.0f"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Kind, Seconds);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.1f evt=camp_buff hero=%s team=%d kind=%d seconds=%.0f"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Kind, Seconds);
 }
 
 void AArenaCharacter::Displace(const FVector& Direction, float DistanceCm, float HeightCm, float Seconds)
@@ -969,7 +970,7 @@ void AArenaCharacter::Displace(const FVector& Direction, float DistanceCm, float
 	}
 	// a hit-stop freezing the body right now stretches the flight by its length
 	DisplacedUntil = FMath::Max(DisplacedUntil, Now + Dur + (CustomTimeDilation < 0.5f ? 0.12f : 0.f));
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=displace id=%s from=%s dist=%.0f height=%.0f dur=%.2f"), Now, *Def.Id.ToString(), *GetActorLocation().ToCompactString(), DistanceCm, HeightCm, Dur);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=displace id=%s from=%s dist=%.0f height=%.0f dur=%.2f"), Now, *Def.Id.ToString(), *GetActorLocation().ToCompactString(), DistanceCm, HeightCm, Dur);
 }
 
 bool AArenaCharacter::TryCast(int32 Slot)
@@ -1138,7 +1139,7 @@ float AArenaCharacter::ReceiveHit(float Raw, AArenaCharacter* Source, const FAre
 			LastStandReadyAt = LastDamageTime + ItemPassives.LastStandCd;
 			ReceiveShield(GetMaxHealth() * ItemPassives.LastStandShieldPct);
 			ArenaFx::Spawn(this, TEXT("/Game/ParagonProps/FX/Particles/Core/P_Core_CharacterRecall.P_Core_CharacterRecall"), GetActorLocation(), FLinearColor(0.5f, 0.9f, 1.f));
-			UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=passive name=laststand hero=%s shield=%.0f"), LastDamageTime, *Def.Id.ToString(), GetShield());
+			ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=passive name=laststand hero=%s shield=%.0f"), LastDamageTime, *Def.Id.ToString(), GetShield());
 		}
 	}
 	// items: Pancerz tytana — a basic attack reflects part of the blow to the attacker
@@ -1337,7 +1338,7 @@ void AArenaCharacter::StartDash(const FVector& Direction, float DistanceCm, cons
 	Move->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::ClampVelocity;
 	Move->FinishVelocityParams.ClampVelocity = FinishSpeed;
 	DashRootMotion = GetCharacterMovement()->ApplyRootMotionSource(Move);
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=dash id=%s from=%s to=%s len=%.0f dur=%.2f rm=%d mode=%d ctrl=%d"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), *Start.ToCompactString(), *End.ToCompactString(), Len, Duration, (int32)DashRootMotion, (int32)GetCharacterMovement()->MovementMode, GetController() ? 1 : 0);
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=dash id=%s from=%s to=%s len=%.0f dur=%.2f rm=%d mode=%d ctrl=%d"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), *Start.ToCompactString(), *End.ToCompactString(), Len, Duration, (int32)DashRootMotion, (int32)GetCharacterMovement()->MovementMode, GetController() ? 1 : 0);
 }
 
 void AArenaCharacter::HoldFacing(float Yaw, float Seconds)
@@ -1442,7 +1443,7 @@ void AArenaCharacter::TickDash(float DeltaSeconds)
 	{
 		DashRemaining = 0.f;
 		GetCharacterMovement()->RemoveRootMotionSourceByID(DashRootMotion);
-		UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=dash_end id=%s at=%s"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), *GetActorLocation().ToCompactString());
+		ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=dash_end id=%s at=%s"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), *GetActorLocation().ToCompactString());
 		if (DashAbility.EndRadius > 0.f)
 		{
 			TSet<uint64> EndHits;
@@ -1510,7 +1511,7 @@ FName AArenaCharacter::AnimSlot(bool bUpperBody) const
 	if (Full.IsNone()) { Full = Slots.Num() > 0 ? Slots[0] : FName(TEXT("DefaultSlot")); }
 	if (Upper.IsNone()) { Upper = Full; }
 	Cache.Add(Anim->GetClass(), TPair<FName, FName>(Full, Upper));
-	UE_LOG(LogArena, Display, TEXT("ARENA evt=anim_slots class=%s slots=%s full=%s upper=%s"), *Anim->GetClass()->GetName(),
+	ARENA_LOG(LogArena, Display, TEXT("ARENA evt=anim_slots class=%s slots=%s full=%s upper=%s"), *Anim->GetClass()->GetName(),
 		*FString::JoinBy(Slots, TEXT(","), [](const FName& N) { return N.ToString(); }), *Full.ToString(), *Upper.ToString());
 	return bUpperBody ? Upper : Full;
 }
@@ -1678,7 +1679,7 @@ void AArenaCharacter::DebugDumpAnim() const
 		else if (const FObjectPropertyBase* O = CastField<FObjectPropertyBase>(P)) { const UObject* V = O->GetObjectPropertyValue_InContainer(Anim); Vars += FString::Printf(TEXT("%s=%s "), *P->GetName(), V ? *V->GetClass()->GetName() : TEXT("null")); }
 		else if (const FStructProperty* S = CastField<FStructProperty>(P)) { Vars += FString::Printf(TEXT("%s:%s "), *P->GetName(), *S->Struct->GetName()); }
 	}
-	UE_LOG(LogArena, Display, TEXT("ARENA animdbg id=%s minion=%d cls=%s vel=%.0f accel=%.0f mode=%d montage=%d vars: %s"), *Def.Id.ToString(), bMinion ? 1 : 0, *Anim->GetClass()->GetName(),
+	ARENA_LOG(LogArena, Display, TEXT("ARENA animdbg id=%s minion=%d cls=%s vel=%.0f accel=%.0f mode=%d montage=%d vars: %s"), *Def.Id.ToString(), bMinion ? 1 : 0, *Anim->GetClass()->GetName(),
 		GetVelocity().Size2D(), GetCharacterMovement()->GetCurrentAcceleration().Size(), (int32)GetCharacterMovement()->MovementMode, Anim->IsAnyMontagePlaying() ? 1 : 0, *Vars);
 }
 
@@ -1734,7 +1735,7 @@ void AArenaCharacter::AddXp(float Amount)
 	ArenaFx::AttachAt(R.LevelUpFx, GetMesh(), NAME_None, 2.f);
 	NetStatus(4, 2.f);
 	Voice(Level >= 5 && Old < 5 ? TEXT("Level_Five") : TEXT("Level_Up"), 2.f);
-	UE_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=levelup hero=%s team=%d level=%d points=%d hp=%.0f power=%.0f"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Level, FreeSkillPoints(), GetMaxHealth(), GetPower());
+	ARENA_LOG(LogArena, Display, TEXT("ARENA t=%.2f evt=levelup hero=%s team=%d level=%d points=%d hp=%.0f power=%.0f"), GetWorld()->GetTimeSeconds(), *Def.Id.ToString(), Team, Level, FreeSkillPoints(), GetMaxHealth(), GetPower());
 	if (!bAssistedAim) { AutoRank(); return; }
 	// the player chooses: a line in the feed, the HUD shows the free points on the ability bar
 	if (GetNetMode() != NM_Standalone && !IsLocallyControlled())

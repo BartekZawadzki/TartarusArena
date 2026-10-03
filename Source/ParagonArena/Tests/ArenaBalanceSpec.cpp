@@ -4,6 +4,7 @@
 // every other role within ±15 %. How long each one survives may differ by role. The matrix goes to the log
 // (BALANCE lines) for the QA document.
 #include "Misc/AutomationTest.h"
+#include "Game/ArenaEvidence.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Data/ArenaTypes.h"
@@ -49,7 +50,7 @@ void FArenaBalanceSpec::Define()
 					SurviveAvg[b] += T / (N - 1);
 					Row += FString::Printf(TEXT("%6.2f"), T);
 				}
-				UE_LOG(LogArena, Display, TEXT("BALANCE L=%d %-10s kills in: %s"), Level, *Sim[a].Id.ToString(), *Row);
+				ARENA_LOG(LogArena, Display, TEXT("BALANCE L=%d %-10s kills in: %s"), Level, *Sim[a].Id.ToString(), *Row);
 			}
 			float Mean = 0.f;
 			for (float V : AttackAvg) { Mean += V / N; }
@@ -61,7 +62,7 @@ void FArenaBalanceSpec::Define()
 				const bool bAssassin = Class.StartsWith(TEXT("Assassin"));
 				const bool bGuardian = Class.StartsWith(TEXT("Guardian"));
 				const float Lo = bAssassin ? -0.35f : (bGuardian ? 0.05f : -0.15f), Hi = bAssassin ? -0.10f : (bGuardian ? 0.35f : 0.15f);
-				UE_LOG(LogArena, Display, TEXT("BALANCE L=%d %-10s attack_avg=%.2f s (%+.0f %%, band %+.0f..%+.0f) survives_avg=%.2f s"), Level, *Sim[i].Id.ToString(), AttackAvg[i], Dev * 100.f, Lo * 100.f, Hi * 100.f, SurviveAvg[i]);
+				ARENA_LOG(LogArena, Display, TEXT("BALANCE L=%d %-10s attack_avg=%.2f s (%+.0f %%, band %+.0f..%+.0f) survives_avg=%.2f s"), Level, *Sim[i].Id.ToString(), AttackAvg[i], Dev * 100.f, Lo * 100.f, Hi * 100.f, SurviveAvg[i]);
 				TestTrue(FString::Printf(TEXT("level %d: %s (%s) kills in %.2f s on average, roster %.2f s (%+.0f %%, band %+.0f..%+.0f %%)"), Level, *Sim[i].Id.ToString(), *Class, AttackAvg[i], Mean, Dev * 100.f, Lo * 100.f, Hi * 100.f), Dev >= Lo && Dev <= Hi);
 			}
 		}
@@ -81,7 +82,7 @@ void FArenaBalanceSpec::Define()
 				if (!M.Abilities.IsValidIndex(0) || M.Abilities[0].Range >= 5.f) { continue; }
 				const ArenaBalance::FKite K = ArenaBalance::Kite(R, M, Db.Rules.RangedFireSlow, Db.Rules.RangedFireSlowSeconds);
 				const float Limit = K.DashMetres > 0.f ? 6.f : 10.f;
-				UE_LOG(LogArena, Display, TEXT("KITE %-10s vs %-10s closing=%.2f m/s dash=%.0f m free=%.1f s (limit %.0f)"), *R.Id.ToString(), *M.Id.ToString(), K.ClosingSpeed, K.DashMetres, K.FreeSeconds, Limit);
+				ARENA_LOG(LogArena, Display, TEXT("KITE %-10s vs %-10s closing=%.2f m/s dash=%.0f m free=%.1f s (limit %.0f)"), *R.Id.ToString(), *M.Id.ToString(), K.ClosingSpeed, K.DashMetres, K.FreeSeconds, Limit);
 				TestTrue(FString::Printf(TEXT("%s catches %s: closing %.2f m/s, %.1f s unanswered"), *M.Id.ToString(), *R.Id.ToString(), K.ClosingSpeed, K.FreeSeconds), K.ClosingSpeed >= 1.f && K.FreeSeconds <= Limit);
 			}
 		}

@@ -1,4 +1,5 @@
 #include "Data/ArenaTypes.h"
+#include "Game/ArenaEvidence.h"
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -131,14 +132,14 @@ const FArenaDatabaseFile& FArenaDatabase::Get()
 		const FString Path = FPaths::ProjectContentDir() / TEXT("Data/heroes.json");
 		if (!FFileHelper::LoadFileToString(Text, *Path))
 		{
-			UE_LOG(LogArena, Error, TEXT("ARENA evt=data_missing path=%s"), *Path);
+			ARENA_LOG(LogArena, Error, TEXT("ARENA evt=data_missing path=%s"), *Path);
 			return Db;
 		}
 		for (const FString& P : Parse(Text, Db))
 		{
-			UE_LOG(LogArena, Error, TEXT("ARENA evt=data_invalid %s"), *P);
+			ARENA_LOG(LogArena, Error, TEXT("ARENA evt=data_invalid %s"), *P);
 		}
-		UE_LOG(LogArena, Display, TEXT("ARENA evt=data_loaded heroes=%d items=%d minutes=%d"), Db.Heroes.Num(), Db.Items.Num(), Db.Rules.MatchMinutes);
+		ARENA_LOG(LogArena, Display, TEXT("ARENA evt=data_loaded heroes=%d items=%d minutes=%d"), Db.Heroes.Num(), Db.Items.Num(), Db.Rules.MatchMinutes);
 	}
 	return Db;
 }

@@ -1,4 +1,5 @@
 #include "Game/ArenaTeaser.h"
+#include "Game/ArenaEvidence.h"
 #include "Heroes/ArenaCharacter.h"
 #include "Proto/ProtoCharacter.h"
 #include "Camera/CameraActor.h"
@@ -118,7 +119,7 @@ void AArenaTeaserDirector::MaybeStart(UWorld* World)
 		// did not hold in the packaged game: 51 frames for a 12 s clip)
 		FApp::SetUseFixedTimeStep(true);
 		FApp::SetFixedDeltaTime(1.0 / 30.0);
-		UE_LOG(LogTeaser, Display, TEXT("TEASER evt=director scene=%s seconds=%.0f preroll=%.0f"), *D->Scene, D->Seconds, D->Preroll);
+		ARENA_LOG(LogTeaser, Display, TEXT("TEASER evt=director scene=%s seconds=%.0f preroll=%.0f"), *D->Scene, D->Seconds, D->Preroll);
 		TeaserFile(FString::Printf(TEXT("TEASER_START %s scene=%s map=%s seconds=%.0f"), *FDateTime::Now().ToString(), *D->Scene, *World->GetMapName(), D->Seconds));
 	}
 }
@@ -244,7 +245,7 @@ void AArenaTeaserDirector::SetupStage()
 		It->SetActorLocationAndRotation(At, FRotator(0.f, i == 0 ? 90.f : -90.f, 0.f), false, nullptr, ETeleportType::TeleportPhysics);
 		It->bAlerted = true;
 	}
-	UE_LOG(LogTeaser, Display, TEXT("TEASER evt=stage fighters=%d"), i);
+	ARENA_LOG(LogTeaser, Display, TEXT("TEASER evt=stage fighters=%d"), i);
 }
 
 void AArenaTeaserDirector::StartRecording()
@@ -268,7 +269,7 @@ void AArenaTeaserDirector::StartRecording()
 	}
 	GTeaserFrames = 0;
 	GTeaserReal0 = FPlatformTime::Seconds();
-	UE_LOG(LogTeaser, Display, TEXT("TEASER evt=record_start t=%.1f scene=%s"), Now, *Scene);
+	ARENA_LOG(LogTeaser, Display, TEXT("TEASER evt=record_start t=%.1f scene=%s"), Now, *Scene);
 	TeaserFile(FString::Printf(TEXT("REC_START t=%.1f fixed=%d dt=%.4f"), Now, FApp::UseFixedTimeStep() ? 1 : 0, FApp::GetFixedDeltaTime()));
 }
 
@@ -411,7 +412,7 @@ void AArenaTeaserDirector::Tick(float DeltaSeconds)
 	{
 		GIsDumpingMovie = 0;
 		bRecording = false;
-		UE_LOG(LogTeaser, Display, TEXT("TEASER evt=record_end t=%.1f"), Now);
+		ARENA_LOG(LogTeaser, Display, TEXT("TEASER evt=record_end t=%.1f"), Now);
 		TeaserFile(FString::Printf(TEXT("REC_END t=%.1f ticks=%d real=%.1f dt=%.4f heat=%d"), Now, GTeaserFrames, FPlatformTime::Seconds() - GTeaserReal0, Dt, Heat));
 		for (const TWeakObjectPtr<AActor>& A : CutAway) { if (A.IsValid()) { A->SetActorHiddenInGame(false); } }
 		UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, false);
